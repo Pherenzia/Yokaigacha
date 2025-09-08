@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Super Auto Pets Clone</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>super_auto_pets_clone</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<false/>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	
+	<!-- Privacy and Security Settings -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+	</dict>
+	
+	<!-- App Store Privacy Information -->
+	<key>NSUserTrackingUsageDescription</key>
+	<string>This app does not track users across other apps or websites.</string>
+	
+	<key>NSCameraUsageDescription</key>
+	<string>Camera access is not required for this app.</string>
+	
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Photo library access is not required for this app.</string>
+	
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Location access is not required for this app.</string>
+	
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Microphone access is not required for this app.</string>
+	
+	<key>NSContactsUsageDescription</key>
+	<string>Contacts access is not required for this app.</string>
+	
+	<key>NSCalendarsUsageDescription</key>
+	<string>Calendar access is not required for this app.</string>
+	
+	<key>NSRemindersUsageDescription</key>
+	<string>Reminders access is not required for this app.</string>
+	
+	<key>NSMotionUsageDescription</key>
+	<string>Motion access is not required for this app.</string>
+	
+	<key>NSHealthShareUsageDescription</key>
+	<string>Health data access is not required for this app.</string>
+	
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Health data update is not required for this app.</string>
+	
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Bluetooth access is not required for this app.</string>
+	
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>Bluetooth peripheral access is not required for this app.</string>
+	
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Speech recognition is not required for this app.</string>
+	
+	<key>NSFaceIDUsageDescription</key>
+	<string>Face ID is not required for this app.</string>
+	
+	<key>NSAppleMusicUsageDescription</key>
+	<string>Apple Music access is not required for this app.</string>
+	
+	<key>NSSiriUsageDescription</key>
+	<string>Siri access is not required for this app.</string>
+	
+	<key>NSHomeKitUsageDescription</key>
+	<string>HomeKit access is not required for this app.</string>
+	
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Local network access is not required for this app.</string>
+	
+	<key>NSNearbyInteractionUsageDescription</key>
+	<string>Nearby interaction is not required for this app.</string>
+	
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>com.superautopetsclone.game</string>
+	</array>
+	
+</dict>
+</plist>
+
