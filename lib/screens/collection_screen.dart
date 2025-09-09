@@ -147,9 +147,9 @@ class _CollectionScreenState extends State<CollectionScreen> {
     return GridView.builder(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3, // More compact - 3 columns instead of 2
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-        childAspectRatio: 0.7, // Smaller cards
+        crossAxisSpacing: 12, // Apple's preferred spacing
+        mainAxisSpacing: 12,
+        childAspectRatio: 0.65, // Slightly taller for better text readability
       ),
       itemCount: _userPets.length,
       itemBuilder: (context, index) {
@@ -176,10 +176,12 @@ class _CollectionScreenState extends State<CollectionScreen> {
         ),
         child: Column(
           children: [
+            // Name and Rarity Section
             Expanded(
-              flex: 3,
+              flex: 2,
               child: Container(
                 width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                 decoration: BoxDecoration(
                   color: isUnlocked 
                       ? rarityColor.withOpacity(0.1)
@@ -190,20 +192,24 @@ class _CollectionScreenState extends State<CollectionScreen> {
                   ),
                 ),
                 child: isUnlocked
-                    ? Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Icon(
-                            _getPetIcon(pet.type),
-                            size: 32,
-                            color: rarityColor,
-                          ),
-                          const SizedBox(height: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
+                          Expanded(
+                            child: Text(
+                              pet.name,
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: rarityColor,
+                                fontSize: 12,
+                              ),
+                              textAlign: TextAlign.left,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
                               color: rarityColor,
                               borderRadius: BorderRadius.circular(8),
@@ -213,59 +219,121 @@ class _CollectionScreenState extends State<CollectionScreen> {
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 8,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
                         ],
                       )
-                    : const Icon(
-                        Icons.lock,
-                        size: 24,
-                        color: AppTheme.secondaryTextColor,
+                    : const Center(
+                        child: Text(
+                          '???',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.secondaryTextColor,
+                            fontSize: 12,
+                          ),
+                        ),
                       ),
               ),
             ),
+            // Yokai Icon Section - Centered
             Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(6),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      isUnlocked ? pet.name : '???',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: isUnlocked 
-                            ? AppTheme.primaryTextColor 
-                            : AppTheme.secondaryTextColor,
-                        fontSize: 10,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    if (isUnlocked) ...[
-                      Text(
-                        '${pet.baseAttack}/${pet.baseHealth}',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.secondaryTextColor,
-                          fontSize: 8,
-                        ),
-                      ),
-                    ] else ...[
-                      Text(
-                        'Locked',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.secondaryTextColor,
-                          fontSize: 8,
-                        ),
-                      ),
-                    ],
-                  ],
+              flex: 4,
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: isUnlocked 
+                      ? rarityColor.withOpacity(0.05)
+                      : AppTheme.backgroundColor,
                 ),
+                child: isUnlocked
+                    ? Center(
+                        child: Icon(
+                          _getPetIcon(pet.type),
+                          size: 40,
+                          color: rarityColor,
+                        ),
+                      )
+                    : const Center(
+                        child: Icon(
+                          Icons.lock,
+                          size: 24,
+                          color: AppTheme.secondaryTextColor,
+                        ),
+                      ),
+              ),
+            ),
+            // Stats Section
+            Expanded(
+              flex: 3,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                decoration: BoxDecoration(
+                  color: isUnlocked 
+                      ? rarityColor.withOpacity(0.15)
+                      : AppTheme.backgroundColor,
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(7),
+                    bottomRight: Radius.circular(7),
+                  ),
+                ),
+                child: isUnlocked
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Attack with Lightning Icon
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.flash_on,
+                                size: 14,
+                                color: AppTheme.accentColor,
+                              ),
+                              const SizedBox(width: 3),
+                              Text(
+                                '${pet.baseAttack}',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: AppTheme.accentColor,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
+                          // Health with Heart Icon
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.favorite,
+                                size: 14,
+                                color: AppTheme.successColor,
+                              ),
+                              const SizedBox(width: 3),
+                              Text(
+                                '${pet.baseHealth}',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: AppTheme.successColor,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      )
+                    : const Center(
+                        child: Text(
+                          'Locked',
+                          style: TextStyle(
+                            color: AppTheme.secondaryTextColor,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
               ),
             ),
           ],
@@ -290,17 +358,17 @@ class _CollectionScreenState extends State<CollectionScreen> {
   IconData _getPetIcon(PetType type) {
     switch (type) {
       case PetType.mammal:
-        return Icons.pets;
+        return Icons.pets; // Tanuki, Kitsune, Bakeneko
       case PetType.bird:
-        return Icons.flight;
+        return Icons.flight; // Tengu
       case PetType.reptile:
-        return Icons.eco;
+        return Icons.eco; // Not used in Yokai theme
       case PetType.fish:
-        return Icons.water;
+        return Icons.water; // Not used in Yokai theme
       case PetType.insect:
-        return Icons.bug_report;
+        return Icons.bug_report; // Not used in Yokai theme
       case PetType.mythical:
-        return Icons.auto_awesome;
+        return Icons.auto_awesome; // All other Yokai
     }
   }
 }

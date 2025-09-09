@@ -295,9 +295,9 @@ class _ShopScreenState extends State<ShopScreen> {
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 0.8,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+        childAspectRatio: 0.75, // Slightly taller for better text readability
       ),
       itemCount: _availablePets.length,
       itemBuilder: (context, index) {
@@ -311,6 +311,7 @@ class _ShopScreenState extends State<ShopScreen> {
     final isSelected = _selectedPets.contains(pet);
     final canAfford = _canAffordPet(cost);
     final canSelect = _selectedPets.length < 5 && !isSelected;
+    final rarityColor = _getRarityColor(pet.rarity);
 
     return Card(
       elevation: isSelected ? 8 : 2,
@@ -319,48 +320,54 @@ class _ShopScreenState extends State<ShopScreen> {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected 
-                ? _getRarityColor(pet.rarity)
-                : _getRarityColor(pet.rarity).withOpacity(0.3),
+                ? rarityColor
+                : rarityColor.withOpacity(0.3),
             width: isSelected ? 3 : 1,
           ),
         ),
         child: Column(
           children: [
+            // Name and Rarity Section
             Expanded(
-              flex: 3,
+              flex: 2,
               child: Container(
                 width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: _getRarityColor(pet.rarity).withOpacity(0.1),
+                  color: rarityColor.withOpacity(0.1),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(11),
                     topRight: Radius.circular(11),
                   ),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Icon(
-                      _getPetIcon(pet.type),
-                      size: 40,
-                      color: _getRarityColor(pet.rarity),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
+                    Expanded(
+                      child: Text(
+                        pet.name,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: rarityColor,
+                          fontSize: 16,
+                        ),
+                        textAlign: TextAlign.left,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: _getRarityColor(pet.rarity),
-                        borderRadius: BorderRadius.circular(12),
+                        color: rarityColor,
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
                         pet.rarity.name.toUpperCase(),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 10,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
@@ -368,54 +375,111 @@ class _ShopScreenState extends State<ShopScreen> {
                 ),
               ),
             ),
+            // Yokai Icon Section - Centered
             Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(8),
+              flex: 4,
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: rarityColor.withOpacity(0.05),
+                ),
+                child: Center(
+                  child: Icon(
+                    _getPetIcon(pet.type),
+                    size: 50,
+                    color: rarityColor,
+                  ),
+                ),
+              ),
+            ),
+            // Stats and Action Section
+            Expanded(
+              flex: 3,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: rarityColor.withOpacity(0.15),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(11),
+                    bottomRight: Radius.circular(11),
+                  ),
+                ),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Text(
-                      pet.name,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${pet.baseAttack}/${pet.baseHealth}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.secondaryTextColor,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
+                    // Cost and Action Button
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           '$cost coins',
                           style: TextStyle(
                             color: canAfford ? AppTheme.successColor : AppTheme.errorColor,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
                           ),
                         ),
                         if (isSelected)
-                          const Icon(Icons.check_circle, color: AppTheme.successColor, size: 16)
+                          const Icon(Icons.check_circle, color: AppTheme.successColor, size: 24)
                         else if (canSelect && canAfford)
                           IconButton(
-                            icon: const Icon(Icons.add_circle, size: 20),
+                            icon: const Icon(Icons.add_circle, size: 28),
                             onPressed: () => _selectPet(pet, cost),
+                            color: rarityColor,
                           )
                         else
                           Icon(
                             Icons.lock,
                             color: AppTheme.secondaryTextColor,
-                            size: 16,
+                            size: 20,
                           ),
+                      ],
+                    ),
+                    // Attack and Health with Icons
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Attack with Lightning Icon
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.flash_on,
+                              size: 16,
+                              color: AppTheme.accentColor,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${pet.baseAttack}',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: AppTheme.accentColor,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                        // Health with Heart Icon
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.favorite,
+                              size: 16,
+                              color: AppTheme.successColor,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${pet.baseHealth}',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: AppTheme.successColor,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ],
@@ -521,17 +585,18 @@ class _ShopScreenState extends State<ShopScreen> {
   IconData _getPetIcon(PetType type) {
     switch (type) {
       case PetType.mammal:
-        return Icons.pets;
+        return Icons.pets; // Tanuki, Kitsune, Bakeneko
       case PetType.bird:
-        return Icons.flight;
+        return Icons.flight; // Tengu
       case PetType.reptile:
-        return Icons.eco;
+        return Icons.eco; // Not used in Yokai theme
       case PetType.fish:
-        return Icons.water;
+        return Icons.water; // Not used in Yokai theme
       case PetType.insect:
-        return Icons.bug_report;
+        return Icons.bug_report; // Not used in Yokai theme
       case PetType.mythical:
-        return Icons.auto_awesome;
+        return Icons.auto_awesome; // All other Yokai
     }
   }
 }
+

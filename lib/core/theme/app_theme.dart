@@ -2,35 +2,36 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class AppTheme {
-  // Color Palette - Following Apple Design Guidelines
-  static const Color primaryColor = Color(0xFF007AFF);
-  static const Color secondaryColor = Color(0xFF5856D6);
-  static const Color accentColor = Color(0xFFFF9500);
-  static const Color successColor = Color(0xFF34C759);
-  static const Color warningColor = Color(0xFFFF9500);
-  static const Color errorColor = Color(0xFFFF3B30);
+  // Color Palette - Yokai/Mystical Theme
+  static const Color primaryColor = Color(0xFF6B46C1); // Mystical purple
+  static const Color secondaryColor = Color(0xFF059669); // Forest green
+  static const Color accentColor = Color(0xFFDC2626); // Crimson red
+  static const Color successColor = Color(0xFF10B981); // Emerald green
+  static const Color warningColor = Color(0xFFF59E0B); // Amber
+  static const Color errorColor = Color(0xFFEF4444); // Red
   
-  // Neutral Colors
-  static const Color backgroundColor = Color(0xFFF2F2F7);
-  static const Color surfaceColor = Color(0xFFFFFFFF);
-  static const Color cardColor = Color(0xFFFFFFFF);
-  static const Color dividerColor = Color(0xFFE5E5EA);
+  // Neutral Colors - Darker, more mystical
+  static const Color backgroundColor = Color(0xFF1F2937); // Dark gray
+  static const Color surfaceColor = Color(0xFF374151); // Medium gray
+  static const Color cardColor = Color(0xFF4B5563); // Lighter gray
+  static const Color dividerColor = Color(0xFF6B7280); // Border gray
   
   // Text Colors
-  static const Color primaryTextColor = Color(0xFF000000);
-  static const Color secondaryTextColor = Color(0xFF8E8E93);
-  static const Color tertiaryTextColor = Color(0xFFC7C7CC);
+  static const Color primaryTextColor = Color(0xFFF9FAFB); // Light text
+  static const Color secondaryTextColor = Color(0xFFD1D5DB); // Medium light text
+  static const Color tertiaryTextColor = Color(0xFF9CA3AF); // Muted text
   
-  // Game-specific Colors
-  static const Color petRarityCommon = Color(0xFF8E8E93);
-  static const Color petRarityRare = Color(0xFF007AFF);
-  static const Color petRarityEpic = Color(0xFF5856D6);
-  static const Color petRarityLegendary = Color(0xFFFF9500);
+  // Yokai Rarity Colors
+  static const Color petRarityCommon = Color(0xFF9CA3AF); // Gray - Common spirits
+  static const Color petRarityRare = Color(0xFF3B82F6); // Blue - Water spirits
+  static const Color petRarityEpic = Color(0xFF8B5CF6); // Purple - Powerful demons
+  static const Color petRarityLegendary = Color(0xFFF59E0B); // Gold - Divine beings
   
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
-      colorScheme: const ColorScheme.light(
+      brightness: Brightness.dark,
+      colorScheme: const ColorScheme.dark(
         primary: primaryColor,
         secondary: secondaryColor,
         surface: surfaceColor,
@@ -148,7 +149,7 @@ class AppTheme {
           color: primaryTextColor,
           letterSpacing: -0.5,
         ),
-        systemOverlayStyle: SystemUiOverlayStyle.dark,
+        systemOverlayStyle: SystemUiOverlayStyle.light,
       ),
       
       // Card Theme
