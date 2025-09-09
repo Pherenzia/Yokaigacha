@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../models/game_data.dart';
 import '../models/pet.dart';
 import '../services/storage_service.dart';
+import '../data/pet_data.dart';
 
 class GachaProvider extends ChangeNotifier {
   final _uuid = const Uuid();
@@ -120,6 +121,9 @@ class GachaProvider extends ChangeNotifier {
     
     final isNewVariant = !StorageService.getUnlockedPets().any((p) => p.variantId == pet.variantId);
     
+    // Save the pet to storage so user can use it in battles
+    await StorageService.savePet(pet);
+    
     // Unlock the pet if it's new
     if (isNewVariant) {
       await StorageService.unlockPet(pet.id);
@@ -145,6 +149,9 @@ class GachaProvider extends ChangeNotifier {
     if (pet == null) return null;
     
     final isNewVariant = !StorageService.getUnlockedPets().any((p) => p.variantId == pet.variantId);
+    
+    // Save the pet to storage so user can use it in battles
+    await StorageService.savePet(pet);
     
     if (isNewVariant) {
       await StorageService.unlockPet(pet.id);
@@ -177,29 +184,32 @@ class GachaProvider extends ChangeNotifier {
 
   // Generate a pet of the specified rarity
   Future<Pet?> _generatePet(PetRarity rarity) async {
-    // This would typically load from a database or configuration
-    // For now, we'll create placeholder pets
+    // Get all pets of the specified rarity from our pet data
+    final availablePets = PetData.getPetsByRarity(rarity);
     
-    final petTypes = PetType.values;
-    final petType = petTypes[_random.nextInt(petTypes.length)];
+    if (availablePets.isEmpty) {
+      return null;
+    }
     
-    final baseStats = _getBaseStatsForRarity(rarity);
-    final variantId = _generateVariantId();
+    // Select a random pet from the available pets
+    final selectedPet = availablePets[_random.nextInt(availablePets.length)];
     
+    // Create a copy with a unique ID and mark as unlocked
     return Pet(
       id: _uuid.v4(),
-      name: _generatePetName(petType, rarity),
-      description: _generatePetDescription(petType, rarity),
-      rarity: rarity,
-      type: petType,
-      baseAttack: baseStats['attack']!,
-      baseHealth: baseStats['health']!,
+      name: selectedPet.name,
+      description: selectedPet.description,
+      rarity: selectedPet.rarity,
+      type: selectedPet.type,
+      baseAttack: selectedPet.baseAttack,
+      baseHealth: selectedPet.baseHealth,
       level: 1,
       experience: 0,
-      abilities: _generateAbilities(rarity),
-      imagePath: 'assets/images/pets/${petType.name}_${rarity.name}.png',
-      variantId: variantId,
-      isUnlocked: false,
+      abilities: selectedPet.abilities,
+      imagePath: selectedPet.imagePath,
+      variantId: selectedPet.variantId,
+      isUnlocked: true,
+      unlockDate: DateTime.now(),
     );
   }
 

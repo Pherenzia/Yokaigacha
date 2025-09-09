@@ -6,6 +6,8 @@ import '../core/theme/app_theme.dart';
 import '../widgets/currency_display.dart';
 import '../widgets/main_menu_button.dart';
 import 'battle_screen.dart';
+import 'battle_game_screen.dart';
+import 'shop_screen.dart';
 import 'collection_screen.dart';
 import 'gacha_screen.dart';
 import 'achievements_screen.dart';
@@ -280,11 +282,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             childAspectRatio: 1.2,
             children: [
               MainMenuButton(
-                title: 'Battle',
-                subtitle: 'Custom battles',
-                icon: Icons.sports_mma,
+                title: 'Shop',
+                subtitle: 'Buy pets for battle',
+                icon: Icons.store,
                 color: AppTheme.primaryColor,
-                onTap: () => _navigateToScreen(const BattleScreen()),
+                onTap: () => _navigateToScreen(const ShopScreen()),
               ),
               MainMenuButton(
                 title: 'Collection',
@@ -411,53 +413,27 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _startQuickBattle() async {
-    final gameProvider = Provider.of<GameProvider>(context, listen: false);
-    
-    // Show loading dialog
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(
-        child: Card(
-          child: Padding(
-            padding: EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 16),
-                Text('Starting battle...'),
-              ],
-            ),
-          ),
-        ),
+    // Navigate to shop first, then to battle
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => const ShopScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(1.0, 0.0);
+          const end = Offset.zero;
+          const curve = Curves.easeInOutCubic;
+          
+          var tween = Tween(begin: begin, end: end).chain(
+            CurveTween(curve: curve),
+          );
+          
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 300),
       ),
     );
-
-    try {
-      final result = await gameProvider.quickBattle();
-      
-      // Close loading dialog
-      if (mounted) Navigator.of(context).pop();
-      
-      // Show battle result
-      if (mounted) {
-        _showBattleResult(result);
-      }
-    } catch (e) {
-      // Close loading dialog
-      if (mounted) Navigator.of(context).pop();
-      
-      // Show error
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Battle failed: $e'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
-      }
-    }
   }
 
   void _showBattleResult(dynamic result) {

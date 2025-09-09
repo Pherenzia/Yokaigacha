@@ -87,6 +87,40 @@ class UserProgress {
 
   factory UserProgress.fromJson(Map<String, dynamic> json) => _$UserProgressFromJson(json);
   Map<String, dynamic> toJson() => _$UserProgressToJson(this);
+
+  UserProgress copyWith({
+    String? userId,
+    int? coins,
+    int? gems,
+    int? level,
+    int? experience,
+    List<String>? unlockedPets,
+    List<String>? unlockedVariants,
+    int? battlesWon,
+    int? battlesLost,
+    int? currentStreak,
+    int? bestStreak,
+    DateTime? lastPlayDate,
+    Map<String, int>? petUsageStats,
+    List<String>? achievements,
+  }) {
+    return UserProgress(
+      userId: userId ?? this.userId,
+      coins: coins ?? this.coins,
+      gems: gems ?? this.gems,
+      level: level ?? this.level,
+      experience: experience ?? this.experience,
+      unlockedPets: unlockedPets ?? this.unlockedPets,
+      unlockedVariants: unlockedVariants ?? this.unlockedVariants,
+      battlesWon: battlesWon ?? this.battlesWon,
+      battlesLost: battlesLost ?? this.battlesLost,
+      currentStreak: currentStreak ?? this.currentStreak,
+      bestStreak: bestStreak ?? this.bestStreak,
+      lastPlayDate: lastPlayDate ?? this.lastPlayDate,
+      petUsageStats: petUsageStats ?? this.petUsageStats,
+      achievements: achievements ?? this.achievements,
+    );
+  }
 }
 
 @HiveType(typeId: 6)

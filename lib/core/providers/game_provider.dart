@@ -64,21 +64,8 @@ class GameProvider extends ChangeNotifier {
   Future<void> addCoins(int amount) async {
     if (_userProgress == null) return;
     
-    final updatedProgress = UserProgress(
-      userId: _userProgress!.userId,
+    final updatedProgress = _userProgress!.copyWith(
       coins: _userProgress!.coins + amount,
-      gems: _userProgress!.gems,
-      level: _userProgress!.level,
-      experience: _userProgress!.experience,
-      unlockedPets: _userProgress!.unlockedPets,
-      unlockedVariants: _userProgress!.unlockedVariants,
-      battlesWon: _userProgress!.battlesWon,
-      battlesLost: _userProgress!.battlesLost,
-      currentStreak: _userProgress!.currentStreak,
-      bestStreak: _userProgress!.bestStreak,
-      lastPlayDate: _userProgress!.lastPlayDate,
-      petUsageStats: _userProgress!.petUsageStats,
-      achievements: _userProgress!.achievements,
     );
     
     await updateUserProgress(updatedProgress);
@@ -87,21 +74,8 @@ class GameProvider extends ChangeNotifier {
   Future<void> addGems(int amount) async {
     if (_userProgress == null) return;
     
-    final updatedProgress = UserProgress(
-      userId: _userProgress!.userId,
-      coins: _userProgress!.coins,
+    final updatedProgress = _userProgress!.copyWith(
       gems: _userProgress!.gems + amount,
-      level: _userProgress!.level,
-      experience: _userProgress!.experience,
-      unlockedPets: _userProgress!.unlockedPets,
-      unlockedVariants: _userProgress!.unlockedVariants,
-      battlesWon: _userProgress!.battlesWon,
-      battlesLost: _userProgress!.battlesLost,
-      currentStreak: _userProgress!.currentStreak,
-      bestStreak: _userProgress!.bestStreak,
-      lastPlayDate: _userProgress!.lastPlayDate,
-      petUsageStats: _userProgress!.petUsageStats,
-      achievements: _userProgress!.achievements,
     );
     
     await updateUserProgress(updatedProgress);
@@ -119,21 +93,10 @@ class GameProvider extends ChangeNotifier {
       newLevel++;
     }
     
-    final updatedProgress = UserProgress(
-      userId: _userProgress!.userId,
-      coins: _userProgress!.coins,
-      gems: _userProgress!.gems,
+    final updatedProgress = _userProgress!.copyWith(
       level: newLevel,
       experience: newExperience,
-      unlockedPets: _userProgress!.unlockedPets,
-      unlockedVariants: _userProgress!.unlockedVariants,
-      battlesWon: _userProgress!.battlesWon,
-      battlesLost: _userProgress!.battlesLost,
-      currentStreak: _userProgress!.currentStreak,
-      bestStreak: _userProgress!.bestStreak,
       lastPlayDate: DateTime.now(),
-      petUsageStats: _userProgress!.petUsageStats,
-      achievements: _userProgress!.achievements,
     );
     
     await updateUserProgress(updatedProgress);
@@ -203,21 +166,15 @@ class GameProvider extends ChangeNotifier {
       newCurrentStreak = 0;
     }
     
-    final updatedProgress = UserProgress(
-      userId: _userProgress!.userId,
+    final updatedProgress = _userProgress!.copyWith(
       coins: _userProgress!.coins + result.coinsEarned,
-      gems: _userProgress!.gems,
-      level: _userProgress!.level,
       experience: _userProgress!.experience + result.experienceEarned,
-      unlockedPets: _userProgress!.unlockedPets,
-      unlockedVariants: _userProgress!.unlockedVariants,
       battlesWon: newBattlesWon,
       battlesLost: newBattlesLost,
       currentStreak: newCurrentStreak,
       bestStreak: newBestStreak,
       lastPlayDate: DateTime.now(),
       petUsageStats: updatedStats,
-      achievements: _userProgress!.achievements,
     );
     
     await updateUserProgress(updatedProgress);

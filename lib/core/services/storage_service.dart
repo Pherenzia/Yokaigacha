@@ -19,11 +19,9 @@ class StorageService {
       
       // Try to initialize Hive boxes (may fail on web)
       try {
-        _userProgressBox = await Hive.openBox<UserProgress>('user_progress');
-        _petsBox = await Hive.openBox<Pet>('pets');
-        _battleResultsBox = await Hive.openBox<BattleResult>('battle_results');
-        _gachaResultsBox = await Hive.openBox<GachaResult>('gacha_results');
-        _achievementsBox = await Hive.openBox<Achievement>('achievements');
+        // For now, skip Hive adapter registration and use SharedPreferences fallback
+        // This ensures the app works while we can focus on the core gameplay
+        print('Using SharedPreferences for data storage (Hive adapters not available)');
       } catch (hiveError) {
         print('Hive initialization failed, using SharedPreferences only: $hiveError');
         // Continue with SharedPreferences only
@@ -37,12 +35,8 @@ class StorageService {
   // User Progress Methods
   static Future<void> saveUserProgress(UserProgress progress) async {
     try {
-      if (_userProgressBox.isOpen) {
-        await _userProgressBox.put('current_user', progress);
-      } else {
-        // Fallback to SharedPreferences
-        await _prefs.setString('user_progress', progress.toJson().toString());
-      }
+      // Use SharedPreferences for now
+      await _prefs.setString('user_progress', progress.toJson().toString());
     } catch (e) {
       print('Failed to save user progress: $e');
     }
@@ -50,15 +44,10 @@ class StorageService {
 
   static UserProgress? getUserProgress() {
     try {
-      if (_userProgressBox.isOpen) {
-        return _userProgressBox.get('current_user');
-      } else {
-        // Fallback to SharedPreferences
-        final jsonString = _prefs.getString('user_progress');
-        if (jsonString != null) {
-          // For now, return a default progress if we can't parse
-          return UserProgress.initial('default_user');
-        }
+      // Use SharedPreferences for now
+      final jsonString = _prefs.getString('user_progress');
+      if (jsonString != null) {
+        return UserProgress.fromJson(jsonDecode(jsonString));
       }
     } catch (e) {
       print('Failed to get user progress: $e');
@@ -80,9 +69,11 @@ class StorageService {
   // Pet Methods
   static Future<void> savePet(Pet pet) async {
     try {
-      if (_petsBox.isOpen) {
-        await _petsBox.put(pet.id, pet);
-      }
+      // Use SharedPreferences for now
+      final petsJson = _prefs.getString('pets') ?? '{}';
+      final petsMap = Map<String, dynamic>.from(jsonDecode(petsJson));
+      petsMap[pet.id] = pet.toJson();
+      await _prefs.setString('pets', jsonEncode(petsMap));
     } catch (e) {
       print('Failed to save pet: $e');
     }
@@ -90,8 +81,11 @@ class StorageService {
 
   static Pet? getPet(String petId) {
     try {
-      if (_petsBox.isOpen) {
-        return _petsBox.get(petId);
+      // Use SharedPreferences for now
+      final petsJson = _prefs.getString('pets') ?? '{}';
+      final petsMap = Map<String, dynamic>.from(jsonDecode(petsJson));
+      if (petsMap.containsKey(petId)) {
+        return Pet.fromJson(petsMap[petId]);
       }
     } catch (e) {
       print('Failed to get pet: $e');
@@ -101,9 +95,10 @@ class StorageService {
 
   static List<Pet> getAllPets() {
     try {
-      if (_petsBox.isOpen) {
-        return _petsBox.values.toList();
-      }
+      // Use SharedPreferences for now
+      final petsJson = _prefs.getString('pets') ?? '{}';
+      final petsMap = Map<String, dynamic>.from(jsonDecode(petsJson));
+      return petsMap.values.map((petJson) => Pet.fromJson(petJson)).toList();
     } catch (e) {
       print('Failed to get all pets: $e');
     }
@@ -112,9 +107,13 @@ class StorageService {
 
   static List<Pet> getUnlockedPets() {
     try {
-      if (_petsBox.isOpen) {
-        return _petsBox.values.where((pet) => pet.isUnlocked).toList();
-      }
+      // Use SharedPreferences for now
+      final petsJson = _prefs.getString('pets') ?? '{}';
+      final petsMap = Map<String, dynamic>.from(jsonDecode(petsJson));
+      return petsMap.values
+          .map((petJson) => Pet.fromJson(petJson))
+          .where((pet) => pet.isUnlocked)
+          .toList();
     } catch (e) {
       print('Failed to get unlocked pets: $e');
     }
@@ -135,9 +134,11 @@ class StorageService {
   // Battle Results Methods
   static Future<void> saveBattleResult(BattleResult result) async {
     try {
-      if (_battleResultsBox.isOpen) {
-        await _battleResultsBox.put(result.battleId, result);
-      }
+      // Use SharedPreferences for now
+      final battleJson = _prefs.getString('battle_results') ?? '{}';
+      final battleMap = Map<String, dynamic>.from(jsonDecode(battleJson));
+      battleMap[result.battleId] = result.toJson();
+      await _prefs.setString('battle_results', jsonEncode(battleMap));
     } catch (e) {
       print('Failed to save battle result: $e');
     }
@@ -145,10 +146,12 @@ class StorageService {
 
   static List<BattleResult> getBattleHistory() {
     try {
-      if (_battleResultsBox.isOpen) {
-        return _battleResultsBox.values.toList()
-          ..sort((a, b) => b.battleDate.compareTo(a.battleDate));
-      }
+      // Use SharedPreferences for now
+      final battleJson = _prefs.getString('battle_results') ?? '{}';
+      final battleMap = Map<String, dynamic>.from(jsonDecode(battleJson));
+      final results = battleMap.values.map((resultJson) => BattleResult.fromJson(resultJson)).toList();
+      results.sort((a, b) => b.battleDate.compareTo(a.battleDate));
+      return results;
     } catch (e) {
       print('Failed to get battle history: $e');
     }
@@ -163,9 +166,11 @@ class StorageService {
   // Gacha Results Methods
   static Future<void> saveGachaResult(GachaResult result) async {
     try {
-      if (_gachaResultsBox.isOpen) {
-        await _gachaResultsBox.put(result.id, result);
-      }
+      // Use SharedPreferences for now
+      final gachaJson = _prefs.getString('gacha_results') ?? '{}';
+      final gachaMap = Map<String, dynamic>.from(jsonDecode(gachaJson));
+      gachaMap[result.id] = result.toJson();
+      await _prefs.setString('gacha_results', jsonEncode(gachaMap));
     } catch (e) {
       print('Failed to save gacha result: $e');
     }
@@ -173,10 +178,12 @@ class StorageService {
 
   static List<GachaResult> getGachaHistory() {
     try {
-      if (_gachaResultsBox.isOpen) {
-        return _gachaResultsBox.values.toList()
-          ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
-      }
+      // Use SharedPreferences for now
+      final gachaJson = _prefs.getString('gacha_results') ?? '{}';
+      final gachaMap = Map<String, dynamic>.from(jsonDecode(gachaJson));
+      final results = gachaMap.values.map((resultJson) => GachaResult.fromJson(resultJson)).toList();
+      results.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      return results;
     } catch (e) {
       print('Failed to get gacha history: $e');
     }
@@ -186,9 +193,11 @@ class StorageService {
   // Achievement Methods
   static Future<void> saveAchievement(Achievement achievement) async {
     try {
-      if (_achievementsBox.isOpen) {
-        await _achievementsBox.put(achievement.id, achievement);
-      }
+      // Use SharedPreferences for now
+      final achievementsJson = _prefs.getString('achievements') ?? '{}';
+      final achievementsMap = Map<String, dynamic>.from(jsonDecode(achievementsJson));
+      achievementsMap[achievement.id] = achievement.toJson();
+      await _prefs.setString('achievements', jsonEncode(achievementsMap));
     } catch (e) {
       print('Failed to save achievement: $e');
     }
@@ -196,9 +205,10 @@ class StorageService {
 
   static List<Achievement> getAllAchievements() {
     try {
-      if (_achievementsBox.isOpen) {
-        return _achievementsBox.values.toList();
-      }
+      // Use SharedPreferences for now
+      final achievementsJson = _prefs.getString('achievements') ?? '{}';
+      final achievementsMap = Map<String, dynamic>.from(jsonDecode(achievementsJson));
+      return achievementsMap.values.map((achievementJson) => Achievement.fromJson(achievementJson)).toList();
     } catch (e) {
       print('Failed to get all achievements: $e');
     }
@@ -207,9 +217,13 @@ class StorageService {
 
   static List<Achievement> getUnlockedAchievements() {
     try {
-      if (_achievementsBox.isOpen) {
-        return _achievementsBox.values.where((achievement) => achievement.isUnlocked).toList();
-      }
+      // Use SharedPreferences for now
+      final achievementsJson = _prefs.getString('achievements') ?? '{}';
+      final achievementsMap = Map<String, dynamic>.from(jsonDecode(achievementsJson));
+      return achievementsMap.values
+          .map((achievementJson) => Achievement.fromJson(achievementJson))
+          .where((achievement) => achievement.isUnlocked)
+          .toList();
     } catch (e) {
       print('Failed to get unlocked achievements: $e');
     }

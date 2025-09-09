@@ -254,28 +254,17 @@ class UserProgressProvider extends ChangeNotifier {
       achievements: [..._userProgress!.achievements, achievement.id],
     );
     
-    await updateUserProgress(updatedProgress);
+    // Save directly without triggering achievement checks to avoid infinite loop
+    await StorageService.saveUserProgress(updatedProgress);
+    _userProgress = updatedProgress;
   }
 
   // Add coins
   Future<void> addCoins(int amount) async {
     if (_userProgress == null) return;
     
-    final updatedProgress = UserProgress(
-      userId: _userProgress!.userId,
+    final updatedProgress = _userProgress!.copyWith(
       coins: _userProgress!.coins + amount,
-      gems: _userProgress!.gems,
-      level: _userProgress!.level,
-      experience: _userProgress!.experience,
-      unlockedPets: _userProgress!.unlockedPets,
-      unlockedVariants: _userProgress!.unlockedVariants,
-      battlesWon: _userProgress!.battlesWon,
-      battlesLost: _userProgress!.battlesLost,
-      currentStreak: _userProgress!.currentStreak,
-      bestStreak: _userProgress!.bestStreak,
-      lastPlayDate: _userProgress!.lastPlayDate,
-      petUsageStats: _userProgress!.petUsageStats,
-      achievements: _userProgress!.achievements,
     );
     
     await updateUserProgress(updatedProgress);
@@ -285,21 +274,8 @@ class UserProgressProvider extends ChangeNotifier {
   Future<void> addGems(int amount) async {
     if (_userProgress == null) return;
     
-    final updatedProgress = UserProgress(
-      userId: _userProgress!.userId,
-      coins: _userProgress!.coins,
+    final updatedProgress = _userProgress!.copyWith(
       gems: _userProgress!.gems + amount,
-      level: _userProgress!.level,
-      experience: _userProgress!.experience,
-      unlockedPets: _userProgress!.unlockedPets,
-      unlockedVariants: _userProgress!.unlockedVariants,
-      battlesWon: _userProgress!.battlesWon,
-      battlesLost: _userProgress!.battlesLost,
-      currentStreak: _userProgress!.currentStreak,
-      bestStreak: _userProgress!.bestStreak,
-      lastPlayDate: _userProgress!.lastPlayDate,
-      petUsageStats: _userProgress!.petUsageStats,
-      achievements: _userProgress!.achievements,
     );
     
     await updateUserProgress(updatedProgress);

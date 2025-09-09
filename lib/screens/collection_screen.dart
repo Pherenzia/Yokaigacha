@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/theme/app_theme.dart';
 import '../core/providers/user_progress_provider.dart';
+import '../core/models/pet.dart';
+import '../core/services/storage_service.dart';
 import '../widgets/currency_display.dart';
 
 class CollectionScreen extends StatefulWidget {
@@ -12,6 +14,40 @@ class CollectionScreen extends StatefulWidget {
 }
 
 class _CollectionScreenState extends State<CollectionScreen> {
+  List<Pet> _userPets = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserPets();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Reload pets when returning to this screen (e.g., from gacha)
+    _loadUserPets();
+  }
+
+  Future<void> _loadUserPets() async {
+    setState(() {
+      _isLoading = true;
+    });
+    
+    try {
+      final pets = StorageService.getAllPets();
+      setState(() {
+        _userPets = pets;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,56 +64,22 @@ class _CollectionScreenState extends State<CollectionScreen> {
           ),
         ],
       ),
-      body: Consumer<UserProgressProvider>(
-        builder: (context, provider, child) {
-          if (provider.isLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-
-          if (provider.error != null) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: AppTheme.errorColor,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Error: ${provider.error}',
-                    style: Theme.of(context).textTheme.bodyLarge,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => provider.initializeUserProgress(),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return _buildCollectionContent(provider);
-        },
-      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _buildCollectionContent(),
     );
   }
 
-  Widget _buildCollectionContent(UserProgressProvider provider) {
-    final stats = provider.getProgressStats();
-    final unlockedPets = stats['unlockedPets'] ?? 0;
+  Widget _buildCollectionContent() {
+    final unlockedPets = _userPets.where((pet) => pet.isUnlocked).length;
+    final totalPets = _userPets.length;
 
     return Padding(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          _buildCollectionStats(unlockedPets),
-          const SizedBox(height: 20),
+          _buildCollectionStats(unlockedPets, totalPets),
+          const SizedBox(height: 16),
           Expanded(
             child: _buildPetGrid(),
           ),
@@ -86,7 +88,7 @@ class _CollectionScreenState extends State<CollectionScreen> {
     );
   }
 
-  Widget _buildCollectionStats(int unlockedPets) {
+  Widget _buildCollectionStats(int unlockedPets, int totalPets) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -101,13 +103,13 @@ class _CollectionScreenState extends State<CollectionScreen> {
             ),
             _buildStatItem(
               'Total',
-              '50', // Placeholder total
+              totalPets.toString(),
               Icons.collections,
               AppTheme.secondaryColor,
             ),
             _buildStatItem(
               'Completion',
-              '${(unlockedPets / 50 * 100).round()}%',
+              totalPets > 0 ? '${(unlockedPets / totalPets * 100).round()}%' : '0%',
               Icons.percent,
               AppTheme.successColor,
             ),
@@ -144,30 +146,32 @@ class _CollectionScreenState extends State<CollectionScreen> {
   Widget _buildPetGrid() {
     return GridView.builder(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 0.8,
+        crossAxisCount: 3, // More compact - 3 columns instead of 2
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+        childAspectRatio: 0.7, // Smaller cards
       ),
-      itemCount: 20, // Placeholder count
+      itemCount: _userPets.length,
       itemBuilder: (context, index) {
-        return _buildPetCard(index);
+        return _buildPetCard(_userPets[index]);
       },
     );
   }
 
-  Widget _buildPetCard(int index) {
-    // Simulate some unlocked pets
-    final isUnlocked = index < 5;
-    final rarity = _getRarityForIndex(index);
+  Widget _buildPetCard(Pet pet) {
+    final isUnlocked = pet.isUnlocked;
+    final rarityColor = _getRarityColor(pet.rarity);
 
     return Card(
+      elevation: isUnlocked ? 4 : 1,
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: _getRarityColor(rarity).withOpacity(0.3),
-            width: 2,
+            color: isUnlocked 
+                ? rarityColor.withOpacity(0.5)
+                : AppTheme.dividerColor,
+            width: 1,
           ),
         ),
         child: Column(
@@ -178,11 +182,11 @@ class _CollectionScreenState extends State<CollectionScreen> {
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: isUnlocked 
-                      ? _getRarityColor(rarity).withOpacity(0.1)
+                      ? rarityColor.withOpacity(0.1)
                       : AppTheme.backgroundColor,
                   borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(10),
-                    topRight: Radius.circular(10),
+                    topLeft: Radius.circular(7),
+                    topRight: Radius.circular(7),
                   ),
                 ),
                 child: isUnlocked
@@ -190,25 +194,25 @@ class _CollectionScreenState extends State<CollectionScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
-                            Icons.pets,
-                            size: 48,
-                            color: _getRarityColor(rarity),
+                            _getPetIcon(pet.type),
+                            size: 32,
+                            color: rarityColor,
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 4),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
+                              horizontal: 6,
+                              vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: _getRarityColor(rarity),
-                              borderRadius: BorderRadius.circular(12),
+                              color: rarityColor,
+                              borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              rarity.toUpperCase(),
+                              pet.rarity.name.toUpperCase(),
                               style: const TextStyle(
                                 color: Colors.white,
-                                fontSize: 10,
+                                fontSize: 8,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -217,7 +221,7 @@ class _CollectionScreenState extends State<CollectionScreen> {
                       )
                     : const Icon(
                         Icons.lock,
-                        size: 32,
+                        size: 24,
                         color: AppTheme.secondaryTextColor,
                       ),
               ),
@@ -225,27 +229,41 @@ class _CollectionScreenState extends State<CollectionScreen> {
             Expanded(
               flex: 2,
               child: Padding(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(6),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      isUnlocked ? 'Pet ${index + 1}' : '???',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      isUnlocked ? pet.name : '???',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: isUnlocked 
                             ? AppTheme.primaryTextColor 
                             : AppTheme.secondaryTextColor,
+                        fontSize: 10,
                       ),
                       textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      isUnlocked ? 'Level 1' : 'Locked',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.secondaryTextColor,
+                    const SizedBox(height: 2),
+                    if (isUnlocked) ...[
+                      Text(
+                        '${pet.baseAttack}/${pet.baseHealth}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.secondaryTextColor,
+                          fontSize: 8,
+                        ),
                       ),
-                    ),
+                    ] else ...[
+                      Text(
+                        'Locked',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.secondaryTextColor,
+                          fontSize: 8,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -256,25 +274,33 @@ class _CollectionScreenState extends State<CollectionScreen> {
     );
   }
 
-  String _getRarityForIndex(int index) {
-    if (index < 2) return 'common';
-    if (index < 4) return 'rare';
-    if (index < 5) return 'epic';
-    return 'legendary';
+  Color _getRarityColor(PetRarity rarity) {
+    switch (rarity) {
+      case PetRarity.common:
+        return AppTheme.petRarityCommon;
+      case PetRarity.rare:
+        return AppTheme.petRarityRare;
+      case PetRarity.epic:
+        return AppTheme.petRarityEpic;
+      case PetRarity.legendary:
+        return AppTheme.petRarityLegendary;
+    }
   }
 
-  Color _getRarityColor(String rarity) {
-    switch (rarity) {
-      case 'common':
-        return AppTheme.petRarityCommon;
-      case 'rare':
-        return AppTheme.petRarityRare;
-      case 'epic':
-        return AppTheme.petRarityEpic;
-      case 'legendary':
-        return AppTheme.petRarityLegendary;
-      default:
-        return AppTheme.secondaryTextColor;
+  IconData _getPetIcon(PetType type) {
+    switch (type) {
+      case PetType.mammal:
+        return Icons.pets;
+      case PetType.bird:
+        return Icons.flight;
+      case PetType.reptile:
+        return Icons.eco;
+      case PetType.fish:
+        return Icons.water;
+      case PetType.insect:
+        return Icons.bug_report;
+      case PetType.mythical:
+        return Icons.auto_awesome;
     }
   }
 }
