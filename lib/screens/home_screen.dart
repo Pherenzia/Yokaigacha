@@ -413,10 +413,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _startQuickBattle() async {
-    // Navigate to shop first, then to battle
+    // Navigate directly to battle with current round difficulty
     Navigator.of(context).push(
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const ShopScreen(),
+        pageBuilder: (context, animation, secondaryAnimation) => const BattleGameScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const begin = Offset(1.0, 0.0);
           const end = Offset.zero;

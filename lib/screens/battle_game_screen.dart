@@ -7,6 +7,7 @@ import '../core/models/game_data.dart';
 import '../core/services/battle_service.dart';
 import '../core/services/storage_service.dart';
 import '../core/data/pet_data.dart';
+import 'home_screen.dart';
 
 class BattleGameScreen extends StatefulWidget {
   final List<Pet>? selectedPets;
@@ -26,6 +27,7 @@ class _BattleGameScreenState extends State<BattleGameScreen>
   bool _battleEnded = false;
   String? _battleResult;
   List<String> _battleLog = [];
+  bool _isBattleAnimating = false;
   
   late AnimationController _attackController;
   late AnimationController _damageController;
@@ -90,8 +92,20 @@ class _BattleGameScreenState extends State<BattleGameScreen>
       isAlive: true,
     )).toList();
     
-    _enemyTeam = BattleService.generateEnemyTeam(1);
-    _battleLog.add('Battle started with ${_playerTeam!.length} pets!');
+    // Get current round from user progress
+    final gameProvider = Provider.of<GameProvider>(context, listen: false);
+    final currentRound = gameProvider.userProgress?.currentRound ?? 1;
+    
+    _enemyTeam = BattleService.generateEnemyTeam(currentRound);
+    
+    // Check if this is a boss round
+    final isBossRound = currentRound % 10 == 0;
+    if (isBossRound) {
+      _battleLog.add('🔥 BOSS BATTLE - Round $currentRound! 🔥');
+      _battleLog.add('A powerful boss Yokai has appeared!');
+    } else {
+      _battleLog.add('Round $currentRound - Battle started with ${_playerTeam!.length} pets!');
+    }
   }
 
   @override
@@ -105,10 +119,26 @@ class _BattleGameScreenState extends State<BattleGameScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Battle'),
+        title: Consumer<GameProvider>(
+          builder: (context, gameProvider, child) {
+            final currentRound = gameProvider.userProgress?.currentRound ?? 1;
+            final isBossRound = currentRound % 10 == 0;
+            return Row(
+              children: [
+                if (isBossRound) ...[
+                  const Icon(Icons.warning, color: Colors.red, size: 20),
+                  const SizedBox(width: 8),
+                ],
+                Text('Round $currentRound${isBossRound ? ' - BOSS!' : ''}'),
+              ],
+            );
+          },
+        ),
         leading: IconButton(
           icon: const Icon(Icons.close),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+          ),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -340,46 +370,120 @@ class _BattleGameScreenState extends State<BattleGameScreen>
 
   Widget _buildBattleControls() {
     if (_battleEnded) {
+      final gameProvider = Provider.of<GameProvider>(context, listen: false);
+      final currentRound = gameProvider.userProgress?.currentRound ?? 1;
+      final isVictory = _battleResult == 'Victory!';
+      final nextRound = currentRound + 1;
+      final isBossRound = nextRound % 10 == 0;
+      
       return Container(
         padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Back to Home'),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: _startNewBattle,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryColor,
+        child: isVictory 
+          ? Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (context) => const HomeScreen()),
+                    ),
+                    child: const Text('Back to Home'),
+                  ),
                 ),
-                child: const Text('Battle Again'),
-              ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _startNextRound,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryColor,
+                    ),
+                    child: Text(isBossRound 
+                      ? 'Next Round (BOSS!)' 
+                      : 'Next Round ($nextRound)'),
+                  ),
+                ),
+              ],
+            )
+          : Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(builder: (context) => const HomeScreen()),
+                        ),
+                        child: const Text('Back to Home'),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _startNewBattle,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.secondaryColor,
+                        ),
+                        child: const Text('Try Again'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _restartFromRound1,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.warningColor,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Restart from Round 1'),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
       );
     }
 
     return Container(
       padding: const EdgeInsets.all(16),
-      child: ElevatedButton(
-        onPressed: _isPlayerTurn ? _executePlayerTurn : null,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: _isPlayerTurn ? AppTheme.primaryColor : AppTheme.dividerColor,
-          minimumSize: const Size(double.infinity, 50),
-        ),
-        child: Text(
-          _isPlayerTurn ? 'Attack!' : 'Enemy Turn...',
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+      child: Row(
+        children: [
+          Expanded(
+            flex: 2,
+            child: ElevatedButton(
+              onPressed: (_isPlayerTurn && !_isBattleAnimating) ? _playFullBattle : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: (_isPlayerTurn && !_isBattleAnimating) ? AppTheme.primaryColor : AppTheme.dividerColor,
+                minimumSize: const Size(0, 50),
+              ),
+              child: Text(
+                _isBattleAnimating ? 'Battle in Progress...' : (_isPlayerTurn ? 'Auto Battle' : 'Enemy Turn...'),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
           ),
-        ),
+          const SizedBox(width: 12),
+          Expanded(
+            flex: 1,
+            child: ElevatedButton(
+              onPressed: (_isPlayerTurn && !_isBattleAnimating) ? _quickPlayBattle : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: (_isPlayerTurn && !_isBattleAnimating) ? AppTheme.secondaryColor : AppTheme.dividerColor,
+                minimumSize: const Size(0, 50),
+              ),
+              child: const Text(
+                'Quick Play',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -596,6 +700,32 @@ class _BattleGameScreenState extends State<BattleGameScreen>
       _battleEnded = false;
       _battleResult = null;
       _battleLog.clear();
+      _isBattleAnimating = false;
+    });
+    _initializeBattle();
+  }
+
+  void _startNextRound() async {
+    final gameProvider = Provider.of<GameProvider>(context, listen: false);
+    
+    // Advance to next round on victory
+    if (_battleResult == 'Victory!') {
+      final currentRound = gameProvider.userProgress?.currentRound ?? 1;
+      final nextRound = currentRound + 1;
+      
+      await gameProvider.updateUserProgress(
+        gameProvider.userProgress!.copyWith(
+          currentRound: nextRound,
+        ),
+      );
+    }
+    
+    setState(() {
+      _currentTurn = 0;
+      _isPlayerTurn = true;
+      _battleEnded = false;
+      _battleResult = null;
+      _battleLog.clear();
     });
     _initializeBattle();
   }
@@ -628,5 +758,76 @@ class _BattleGameScreenState extends State<BattleGameScreen>
       case PetType.mythical:
         return Icons.auto_awesome;
     }
+  }
+
+  void _restartFromRound1() async {
+    final gameProvider = Provider.of<GameProvider>(context, listen: false);
+    
+    // Reset to round 1
+    await gameProvider.updateUserProgress(
+      gameProvider.userProgress!.copyWith(
+        currentRound: 1,
+      ),
+    );
+    
+    // Reset battle state and start fresh (same as _startNewBattle)
+    setState(() {
+      _currentTurn = 0;
+      _isPlayerTurn = true;
+      _battleEnded = false;
+      _battleResult = null;
+      _battleLog.clear();
+      _playerTeam = null;
+      _enemyTeam = null;
+      _isBattleAnimating = false;
+    });
+    
+    // Initialize battle with round 1 difficulty
+    _initializeBattle();
+  }
+
+  void _playFullBattle() async {
+    if (_isBattleAnimating || _battleEnded) return;
+    
+    setState(() {
+      _isBattleAnimating = true;
+    });
+    
+    // Play out the entire battle with 0.8s intervals
+    while (!_battleEnded) {
+      if (_isPlayerTurn) {
+        _executePlayerTurn();
+      } else {
+        _executeEnemyTurn();
+      }
+      
+      // Wait 0.8 seconds before next action
+      await Future.delayed(const Duration(milliseconds: 800));
+    }
+    
+    setState(() {
+      _isBattleAnimating = false;
+    });
+  }
+
+  void _quickPlayBattle() async {
+    if (_isBattleAnimating || _battleEnded) return;
+    
+    setState(() {
+      _isBattleAnimating = true;
+    });
+    
+    // Simulate the entire battle instantly
+    while (!_battleEnded) {
+      if (_isPlayerTurn) {
+        _executePlayerTurn();
+      } else {
+        _executeEnemyTurn();
+      }
+    }
+    
+    setState(() {
+      _isBattleAnimating = false;
+    });
   }
 }

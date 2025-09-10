@@ -103,13 +103,14 @@ class GameProvider extends ChangeNotifier {
   }
 
   // Battle Management
-  Future<BattleResult> startBattle(List<BattlePet> playerTeam, {int difficulty = 1}) async {
+  Future<BattleResult> startBattle(List<BattlePet> playerTeam) async {
     if (_userProgress == null) {
       throw Exception('User progress not initialized');
     }
 
     final battleId = _uuid.v4();
-    final enemyTeam = BattleService.generateEnemyTeam(difficulty);
+    final currentRound = _userProgress!.currentRound;
+    final enemyTeam = BattleService.generateEnemyTeam(currentRound);
     final battleResult = BattleService.simulateBattle(
       playerTeam: playerTeam,
       enemyTeam: enemyTeam,
@@ -139,7 +140,7 @@ class GameProvider extends ChangeNotifier {
       isAlive: true,
     )).toList();
     
-    return await startBattle(playerTeam, difficulty: 1);
+    return await startBattle(playerTeam);
   }
 
   Future<void> _updateProgressAfterBattle(BattleResult result) async {
@@ -154,16 +155,19 @@ class GameProvider extends ChangeNotifier {
     int newBattlesLost = _userProgress!.battlesLost;
     int newCurrentStreak = _userProgress!.currentStreak;
     int newBestStreak = _userProgress!.bestStreak;
+    int newCurrentRound = _userProgress!.currentRound;
     
     if (result.isVictory) {
       newBattlesWon++;
       newCurrentStreak++;
+      newCurrentRound++; // Advance to next round on victory
       if (newCurrentStreak > newBestStreak) {
         newBestStreak = newCurrentStreak;
       }
     } else {
       newBattlesLost++;
       newCurrentStreak = 0;
+      // Don't advance round on defeat - player stays on current round
     }
     
     final updatedProgress = _userProgress!.copyWith(
@@ -173,6 +177,7 @@ class GameProvider extends ChangeNotifier {
       battlesLost: newBattlesLost,
       currentStreak: newCurrentStreak,
       bestStreak: newBestStreak,
+      currentRound: newCurrentRound,
       lastPlayDate: DateTime.now(),
       petUsageStats: updatedStats,
     );

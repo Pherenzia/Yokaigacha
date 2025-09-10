@@ -137,31 +137,37 @@ class BattleService {
     return damage.clamp(1, damage);
   }
 
-  /// Generate a random enemy team
-  static List<BattlePet> generateEnemyTeam(int difficulty) {
+  /// Generate a random enemy team with progressive difficulty
+  static List<BattlePet> generateEnemyTeam(int currentRound) {
     final allPets = PetData.getAllPets();
     final enemyPets = <BattlePet>[];
     
-    // Select pets based on difficulty
-    int teamSize = 3 + (difficulty ~/ 3); // 3-5 pets
-    teamSize = teamSize.clamp(3, 5);
+    // Check if this is a boss round (every 10th round)
+    if (currentRound % 10 == 0) {
+      return _generateBossTeam(currentRound);
+    }
+    
+    // Calculate team size: 3 base + 1 every 5 rounds
+    int teamSize = 3 + (currentRound ~/ 5);
+    teamSize = teamSize.clamp(3, 8); // Cap at 8 enemies
     
     for (int i = 0; i < teamSize; i++) {
-      // Higher difficulty = better pets
+      // Higher rounds = better pets
       PetRarity rarity;
-      if (difficulty < 3) {
+      if (currentRound < 3) {
         rarity = PetRarity.common;
-      } else if (difficulty < 6) {
+      } else if (currentRound < 6) {
         rarity = _random.nextBool() ? PetRarity.common : PetRarity.rare;
-      } else if (difficulty < 10) {
+      } else if (currentRound < 10) {
         final rand = _random.nextDouble();
         if (rand < 0.4) rarity = PetRarity.common;
         else if (rand < 0.8) rarity = PetRarity.rare;
         else rarity = PetRarity.epic;
       } else {
         final rand = _random.nextDouble();
-        if (rand < 0.3) rarity = PetRarity.rare;
-        else if (rand < 0.7) rarity = PetRarity.epic;
+        if (rand < 0.2) rarity = PetRarity.common;
+        else if (rand < 0.5) rarity = PetRarity.rare;
+        else if (rand < 0.8) rarity = PetRarity.epic;
         else rarity = PetRarity.legendary;
       }
       
@@ -169,10 +175,14 @@ class BattleService {
       if (availablePets.isNotEmpty) {
         final selectedPet = availablePets[_random.nextInt(availablePets.length)];
         
+        // Apply stat scaling based on round
+        final scaledHealth = _scaleStat(selectedPet.baseHealth, currentRound, 'health');
+        final scaledAttack = _scaleStat(selectedPet.baseAttack, currentRound, 'attack');
+        
         enemyPets.add(BattlePet(
           pet: selectedPet,
-          currentHealth: selectedPet.currentHealth,
-          currentAttack: selectedPet.currentAttack,
+          currentHealth: scaledHealth,
+          currentAttack: scaledAttack,
           position: i,
           activeEffects: [],
           isAlive: true,
@@ -181,5 +191,46 @@ class BattleService {
     }
     
     return enemyPets;
+  }
+
+  /// Generate a boss team for special rounds
+  static List<BattlePet> _generateBossTeam(int currentRound) {
+    final bossPets = PetData.getBossYokai();
+    final selectedBoss = bossPets[_random.nextInt(bossPets.length)];
+    
+    // Boss gets significant stat scaling
+    final bossHealth = _scaleStat(selectedBoss.baseHealth, currentRound, 'health', isBoss: true);
+    final bossAttack = _scaleStat(selectedBoss.baseAttack, currentRound, 'attack', isBoss: true);
+    
+    return [
+      BattlePet(
+        pet: selectedBoss,
+        currentHealth: bossHealth,
+        currentAttack: bossAttack,
+        position: 0,
+        activeEffects: [],
+        isAlive: true,
+      ),
+    ];
+  }
+
+  /// Scale stats based on current round
+  static int _scaleStat(int baseStat, int currentRound, String statType, {bool isBoss = false}) {
+    // Each round increases stats by 1 point
+    int scaling = currentRound - 1;
+    
+    // Boss rounds get additional scaling
+    if (isBoss) {
+      scaling += (currentRound ~/ 10) * 3; // Extra scaling for boss rounds
+    }
+    
+    // Apply scaling to the stat
+    if (statType == 'health') {
+      return baseStat + scaling;
+    } else if (statType == 'attack') {
+      return baseStat + scaling;
+    }
+    
+    return baseStat;
   }
 }

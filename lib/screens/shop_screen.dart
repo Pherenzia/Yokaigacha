@@ -297,7 +297,7 @@ class _ShopScreenState extends State<ShopScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        childAspectRatio: 0.75, // Slightly taller for better text readability
+        childAspectRatio: 0.8, // Adjusted for better layout
       ),
       itemCount: _availablePets.length,
       itemBuilder: (context, index) {
@@ -329,7 +329,7 @@ class _ShopScreenState extends State<ShopScreen> {
           children: [
             // Name and Rarity Section
             Expanded(
-              flex: 2,
+              flex: 3,
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -377,7 +377,7 @@ class _ShopScreenState extends State<ShopScreen> {
             ),
             // Yokai Icon Section - Centered
             Expanded(
-              flex: 4,
+              flex: 3,
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
@@ -394,7 +394,7 @@ class _ShopScreenState extends State<ShopScreen> {
             ),
             // Stats and Action Section
             Expanded(
-              flex: 3,
+              flex: 4,
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

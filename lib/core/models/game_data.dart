@@ -48,6 +48,9 @@ class UserProgress {
   
   @HiveField(13)
   final List<String> achievements;
+  
+  @HiveField(14)
+  final int currentRound;
 
   const UserProgress({
     required this.userId,
@@ -64,6 +67,7 @@ class UserProgress {
     required this.lastPlayDate,
     required this.petUsageStats,
     required this.achievements,
+    required this.currentRound,
   });
 
   factory UserProgress.initial(String userId) {
@@ -82,6 +86,7 @@ class UserProgress {
       lastPlayDate: DateTime.now(),
       petUsageStats: {},
       achievements: [],
+      currentRound: 1,
     );
   }
 
@@ -103,6 +108,7 @@ class UserProgress {
     DateTime? lastPlayDate,
     Map<String, int>? petUsageStats,
     List<String>? achievements,
+    int? currentRound,
   }) {
     return UserProgress(
       userId: userId ?? this.userId,
@@ -119,6 +125,7 @@ class UserProgress {
       lastPlayDate: lastPlayDate ?? this.lastPlayDate,
       petUsageStats: petUsageStats ?? this.petUsageStats,
       achievements: achievements ?? this.achievements,
+      currentRound: currentRound ?? this.currentRound,
     );
   }
 }

@@ -1,9 +1,11 @@
-2025/09/09-12:20:05.843 4cf4 Reusing MANIFEST C:\Users\kaiga\AppData\Local\Temp\flutter_tools.3c2d61ea\flutter_tools_chrome_device.6d949077\Default\Local Storage\leveldb/MANIFEST-000001
-2025/09/09-12:20:05.848 4cf4 Recovering log #11
-2025/09/09-12:20:05.850 4cf4 Reusing old log C:\Users\kaiga\AppData\Local\Temp\flutter_tools.3c2d61ea\flutter_tools_chrome_device.6d949077\Default\Local Storage\leveldb/000011.log 
-2025/09/09-12:20:05.851 4cf4 Delete type=2 #3
-2025/09/09-12:20:05.851 4cf4 Delete type=0 #3
-2025/09/09-12:20:05.851 4cf4 Delete type=0 #5
-2025/09/09-12:20:05.851 4cf4 Delete type=2 #6
-2025/09/09-12:20:05.851 4cf4 Delete type=2 #8
-2025/09/09-12:20:05.851 4cf4 Delete type=0 #9
+2025/09/10-12:24:10.752 16b0 Reusing MANIFEST C:\Users\kaiga\AppData\Local\Temp\flutter_tools.178ace3c\flutter_tools_chrome_device.da37bbc4\Default\Local Storage\leveldb/MANIFEST-000001
+2025/09/10-12:24:10.759 16b0 Recovering log #17
+2025/09/10-12:24:10.763 16b0 Reusing old log C:\Users\kaiga\AppData\Local\Temp\flutter_tools.178ace3c\flutter_tools_chrome_device.da37bbc4\Default\Local Storage\leveldb/000017.log 
+2025/09/10-12:24:10.763 16b0 Delete type=2 #3
+2025/09/10-12:24:10.764 16b0 Delete type=0 #3
+2025/09/10-12:24:10.764 16b0 Delete type=0 #5
+2025/09/10-12:24:10.764 16b0 Delete type=2 #6
+2025/09/10-12:24:10.764 16b0 Delete type=2 #8
+2025/09/10-12:24:10.764 16b0 Delete type=0 #9
+2025/09/10-12:24:10.764 16b0 Delete type=0 #11
+2025/09/10-12:24:10.764 16b0 Delete type=0 #14

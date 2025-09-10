@@ -341,6 +341,84 @@ class PetData {
     ];
   }
 
+  /// Get boss Yokai for special battles (every 10th round)
+  static List<Pet> getBossYokai() {
+    return [
+      // Ancient Dragon Boss
+      Pet(
+        id: 'boss_ancient_dragon_001',
+        name: 'Ancient Dragon',
+        description: 'An ancient dragon that has lived for millennia, wielding immense power.',
+        rarity: PetRarity.legendary,
+        type: PetType.mythical,
+        baseAttack: 12,
+        baseHealth: 15,
+        level: 1,
+        experience: 0,
+        abilities: [
+          PetAbility(
+            name: 'Dragon\'s Wrath',
+            description: 'Deals 12 damage with ancient dragon power.',
+            triggerLevel: 1,
+            triggerCondition: 'start_of_battle',
+            parameters: {'damage': 12, 'ancient': true},
+          ),
+        ],
+        imagePath: 'assets/images/pets/boss_ancient_dragon.png',
+        variantId: 'boss',
+        isUnlocked: false,
+      ),
+      // Demon King Boss
+      Pet(
+        id: 'boss_demon_king_001',
+        name: 'Demon King',
+        description: 'The ruler of all demons, commanding dark forces beyond imagination.',
+        rarity: PetRarity.legendary,
+        type: PetType.mythical,
+        baseAttack: 15,
+        baseHealth: 12,
+        level: 1,
+        experience: 0,
+        abilities: [
+          PetAbility(
+            name: 'Hellfire Blast',
+            description: 'Deals 15 damage with demonic hellfire.',
+            triggerLevel: 1,
+            triggerCondition: 'start_of_battle',
+            parameters: {'damage': 15, 'hellfire': true},
+          ),
+        ],
+        imagePath: 'assets/images/pets/boss_demon_king.png',
+        variantId: 'boss',
+        isUnlocked: false,
+      ),
+      // Celestial Phoenix Boss
+      Pet(
+        id: 'boss_celestial_phoenix_001',
+        name: 'Celestial Phoenix',
+        description: 'A divine phoenix that controls the cycle of life and death.',
+        rarity: PetRarity.legendary,
+        type: PetType.mythical,
+        baseAttack: 10,
+        baseHealth: 18,
+        level: 1,
+        experience: 0,
+        abilities: [
+          PetAbility(
+            name: 'Phoenix Rebirth',
+            description: 'Deals 10 damage and can resurrect once per battle.',
+            triggerLevel: 1,
+            triggerCondition: 'start_of_battle',
+            parameters: {'damage': 10, 'rebirth': true},
+          ),
+        ],
+        imagePath: 'assets/images/pets/boss_celestial_phoenix.png',
+        variantId: 'boss',
+        isUnlocked: false,
+      ),
+    ];
+  }
+
   static Pet? getPetById(String id) {
     return getAllPets().firstWhere(
       (pet) => pet.id == id,

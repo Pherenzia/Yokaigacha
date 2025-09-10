@@ -35,6 +35,7 @@ UserProgress _$UserProgressFromJson(Map<String, dynamic> json) => UserProgress(
       achievements: (json['achievements'] as List<dynamic>)
           .map((e) => e as String)
           .toList(),
+      currentRound: json['currentRound'] as int? ?? 1,
     );
 
 Map<String, dynamic> _$UserProgressToJson(UserProgress instance) =>
@@ -53,6 +54,7 @@ Map<String, dynamic> _$UserProgressToJson(UserProgress instance) =>
       'lastPlayDate': instance.lastPlayDate.toIso8601String(),
       'petUsageStats': instance.petUsageStats,
       'achievements': instance.achievements,
+      'currentRound': instance.currentRound,
     };
 
 BattleTeam _$BattleTeamFromJson(Map<String, dynamic> json) => BattleTeam(
