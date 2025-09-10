@@ -11,6 +11,7 @@ class BattleService {
     required List<BattlePet> playerTeam,
     required List<BattlePet> enemyTeam,
     required String battleId,
+    int currentRound = 1,
   }) {
     final battleLog = <String, dynamic>{};
     final turns = <Map<String, dynamic>>[];
@@ -103,9 +104,31 @@ class BattleService {
       turns.add(turn);
     }
 
-    // Calculate rewards
-    final coinsEarned = playerWon ? 10 + (turnCount * 2) : 5;
-    final experienceEarned = playerWon ? 20 + (turnCount * 3) : 10;
+    // Calculate rewards based on round level
+    int coinsEarned = 0;
+    int experienceEarned = 0;
+    
+    if (playerWon) {
+      // Base rewards: +2 coins per round level, +1 XP per round level
+      coinsEarned = currentRound * 2;
+      experienceEarned = currentRound;
+      
+      // Bonus for every 5th round: +5 coins and +2 XP
+      if (currentRound % 5 == 0) {
+        coinsEarned += 5;
+        experienceEarned += 2;
+      }
+    } else {
+      // Reduced rewards for defeat: half the base rewards
+      coinsEarned = (currentRound * 2) ~/ 2;
+      experienceEarned = currentRound ~/ 2;
+      
+      // Still get bonus for 5th rounds, but reduced
+      if (currentRound % 5 == 0) {
+        coinsEarned += 2;
+        experienceEarned += 1;
+      }
+    }
 
     battleLog['turns'] = turns;
     battleLog['playerTeam'] = playerPets.map((pet) => pet.toJson()).toList();

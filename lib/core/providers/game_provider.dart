@@ -115,6 +115,7 @@ class GameProvider extends ChangeNotifier {
       playerTeam: playerTeam,
       enemyTeam: enemyTeam,
       battleId: battleId,
+      currentRound: currentRound,
     );
     
     // Save battle result

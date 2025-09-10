@@ -26,6 +26,7 @@ class _BattleGameScreenState extends State<BattleGameScreen>
   bool _isPlayerTurn = true;
   bool _battleEnded = false;
   String? _battleResult;
+  BattleResult? _battleResultData;
   List<String> _battleLog = [];
   bool _isBattleAnimating = false;
   
@@ -183,21 +184,91 @@ class _BattleGameScreenState extends State<BattleGameScreen>
             ),
           ),
           if (_battleResult != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: _battleResult == 'Victory!' 
-                    ? AppTheme.successColor 
-                    : AppTheme.errorColor,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                _battleResult!,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+            Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: _battleResult == 'Victory!' 
+                        ? AppTheme.successColor 
+                        : AppTheme.errorColor,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    _battleResult!,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
-              ),
+                if (_battleResultData != null) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.surfaceColor,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppTheme.dividerColor),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Column(
+                          children: [
+                            Icon(
+                              Icons.monetization_on,
+                              color: AppTheme.warningColor,
+                              size: 20,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '+${_battleResultData!.coinsEarned}',
+                              style: TextStyle(
+                                color: AppTheme.warningColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const Text(
+                              'Coins',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Column(
+                          children: [
+                            Icon(
+                              Icons.star,
+                              color: AppTheme.primaryColor,
+                              size: 20,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '+${_battleResultData!.experienceEarned}',
+                              style: TextStyle(
+                                color: AppTheme.primaryColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const Text(
+                              'XP',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
             ),
         ],
       ),
@@ -670,27 +741,74 @@ class _BattleGameScreenState extends State<BattleGameScreen>
     final gameProvider = Provider.of<GameProvider>(context, listen: false);
     final isVictory = _battleResult == 'Victory!';
     
-    // Create battle result
-    final battleResult = BattleResult(
-      battleId: DateTime.now().millisecondsSinceEpoch.toString(),
-      isVictory: isVictory,
-      coinsEarned: isVictory ? 15 : 5,
-      experienceEarned: isVictory ? 25 : 10,
-      petsUsed: _playerTeam!.map((pet) => pet.pet.id).toList(),
-      battleDate: DateTime.now(),
-      turnsTaken: _currentTurn + 1,
-      battleLog: {'log': _battleLog},
-    );
-    
-    // Update user progress
-    await gameProvider.updateUserProgress(
-      gameProvider.userProgress!.copyWith(
-        coins: gameProvider.userProgress!.coins + battleResult.coinsEarned,
-        experience: gameProvider.userProgress!.experience + battleResult.experienceEarned,
-        battlesWon: isVictory ? gameProvider.userProgress!.battlesWon + 1 : gameProvider.userProgress!.battlesWon,
-        battlesLost: !isVictory ? gameProvider.userProgress!.battlesLost + 1 : gameProvider.userProgress!.battlesLost,
-      ),
-    );
+    // If we already have battle result data from the battle service, use it
+    if (_battleResultData != null) {
+      // Update user progress with the battle result from the service
+      await gameProvider.updateUserProgress(
+        gameProvider.userProgress!.copyWith(
+          coins: gameProvider.userProgress!.coins + _battleResultData!.coinsEarned,
+          experience: gameProvider.userProgress!.experience + _battleResultData!.experienceEarned,
+          battlesWon: isVictory ? gameProvider.userProgress!.battlesWon + 1 : gameProvider.userProgress!.battlesWon,
+          battlesLost: !isVictory ? gameProvider.userProgress!.battlesLost + 1 : gameProvider.userProgress!.battlesLost,
+        ),
+      );
+    } else {
+      // Fallback for manual battles (auto battle mode)
+      final currentRound = gameProvider.userProgress?.currentRound ?? 1;
+      
+      // Calculate rewards based on round level
+      int coinsEarned = 0;
+      int experienceEarned = 0;
+      
+      if (isVictory) {
+        // Base rewards: +2 coins per round level, +1 XP per round level
+        coinsEarned = currentRound * 2;
+        experienceEarned = currentRound;
+        
+        // Bonus for every 5th round: +5 coins and +2 XP
+        if (currentRound % 5 == 0) {
+          coinsEarned += 5;
+          experienceEarned += 2;
+        }
+      } else {
+        // Reduced rewards for defeat: half the base rewards
+        coinsEarned = (currentRound * 2) ~/ 2;
+        experienceEarned = currentRound ~/ 2;
+        
+        // Still get bonus for 5th rounds, but reduced
+        if (currentRound % 5 == 0) {
+          coinsEarned += 2;
+          experienceEarned += 1;
+        }
+      }
+      
+      // Create battle result for manual battles
+      final battleResult = BattleResult(
+        battleId: DateTime.now().millisecondsSinceEpoch.toString(),
+        isVictory: isVictory,
+        coinsEarned: coinsEarned,
+        experienceEarned: experienceEarned,
+        petsUsed: _playerTeam!.map((pet) => pet.pet.id).toList(),
+        battleDate: DateTime.now(),
+        turnsTaken: _currentTurn + 1,
+        battleLog: {'log': _battleLog},
+      );
+      
+      // Store battle result data for display
+      setState(() {
+        _battleResultData = battleResult;
+      });
+      
+      // Update user progress
+      await gameProvider.updateUserProgress(
+        gameProvider.userProgress!.copyWith(
+          coins: gameProvider.userProgress!.coins + battleResult.coinsEarned,
+          experience: gameProvider.userProgress!.experience + battleResult.experienceEarned,
+          battlesWon: isVictory ? gameProvider.userProgress!.battlesWon + 1 : gameProvider.userProgress!.battlesWon,
+          battlesLost: !isVictory ? gameProvider.userProgress!.battlesLost + 1 : gameProvider.userProgress!.battlesLost,
+        ),
+      );
+    }
   }
 
   void _startNewBattle() {
@@ -699,6 +817,7 @@ class _BattleGameScreenState extends State<BattleGameScreen>
       _isPlayerTurn = true;
       _battleEnded = false;
       _battleResult = null;
+      _battleResultData = null;
       _battleLog.clear();
       _isBattleAnimating = false;
     });
@@ -725,6 +844,7 @@ class _BattleGameScreenState extends State<BattleGameScreen>
       _isPlayerTurn = true;
       _battleEnded = false;
       _battleResult = null;
+      _battleResultData = null;
       _battleLog.clear();
     });
     _initializeBattle();
@@ -776,6 +896,7 @@ class _BattleGameScreenState extends State<BattleGameScreen>
       _isPlayerTurn = true;
       _battleEnded = false;
       _battleResult = null;
+      _battleResultData = null;
       _battleLog.clear();
       _playerTeam = null;
       _enemyTeam = null;
@@ -793,21 +914,147 @@ class _BattleGameScreenState extends State<BattleGameScreen>
       _isBattleAnimating = true;
     });
     
-    // Play out the entire battle with 0.8s intervals
-    while (!_battleEnded) {
-      if (_isPlayerTurn) {
-        _executePlayerTurn();
-      } else {
-        _executeEnemyTurn();
-      }
+    // Use the proper battle service for consistent results
+    final gameProvider = Provider.of<GameProvider>(context, listen: false);
+    final currentRound = gameProvider.userProgress?.currentRound ?? 1;
+    
+    try {
+      final battleResult = BattleService.simulateBattle(
+        playerTeam: _playerTeam!,
+        enemyTeam: _enemyTeam!,
+        battleId: DateTime.now().millisecondsSinceEpoch.toString(),
+        currentRound: currentRound,
+      );
       
-      // Wait 0.8 seconds before next action
-      await Future.delayed(const Duration(milliseconds: 800));
+      // Simulate the battle with visual feedback
+      await _simulateBattleWithAnimation(battleResult);
+      
+      // Update the battle pets' health to match the battle result
+      _updateBattlePetsHealth(battleResult);
+      
+      // Update the battle state based on the result
+      setState(() {
+        _battleResult = battleResult.isVictory ? 'Victory!' : 'Defeat!';
+        _battleResultData = battleResult;
+        _battleEnded = true;
+        _isPlayerTurn = false;
+        _isBattleAnimating = false;
+      });
+      
+      // Add result to battle log
+      _battleLog.add(battleResult.isVictory ? 'You won the battle!' : 'You lost the battle!');
+      
+      // Save battle result and update user progress
+      _saveBattleResult();
+      
+    } catch (e) {
+      print('Error in auto battle: $e');
+      setState(() {
+        _isBattleAnimating = false;
+      });
+    }
+  }
+
+  void _updateBattlePetsHealth(BattleResult battleResult) {
+    // Update player team health based on battle result
+    final battleLog = battleResult.battleLog;
+    if (battleLog != null && battleLog['playerTeam'] != null) {
+      final playerTeamData = battleLog['playerTeam'] as List<dynamic>;
+      for (int i = 0; i < playerTeamData.length && i < _playerTeam!.length; i++) {
+        final petData = playerTeamData[i] as Map<String, dynamic>;
+        _playerTeam![i].currentHealth = petData['currentHealth'] as int;
+        _playerTeam![i].isAlive = _playerTeam![i].currentHealth > 0;
+      }
     }
     
-    setState(() {
-      _isBattleAnimating = false;
-    });
+    // Update enemy team health based on battle result
+    if (battleLog != null && battleLog['enemyTeam'] != null) {
+      final enemyTeamData = battleLog['enemyTeam'] as List<dynamic>;
+      for (int i = 0; i < enemyTeamData.length && i < _enemyTeam!.length; i++) {
+        final petData = enemyTeamData[i] as Map<String, dynamic>;
+        _enemyTeam![i].currentHealth = petData['currentHealth'] as int;
+        _enemyTeam![i].isAlive = _enemyTeam![i].currentHealth > 0;
+      }
+    }
+  }
+
+  Future<void> _simulateBattleWithAnimation(BattleResult battleResult) async {
+    // Extract battle turns from the battle result
+    final battleLog = battleResult.battleLog;
+    if (battleLog != null && battleLog['turns'] != null) {
+      final turns = battleLog['turns'] as List<dynamic>;
+      
+      for (final turn in turns) {
+        final turnData = turn as Map<String, dynamic>;
+        final turnNumber = turnData['turn'] as int;
+        
+        // Add turn header to battle log
+        _battleLog.add('--- Turn $turnNumber ---');
+        
+        // Process player attacks
+        final playerAttacks = turnData['playerAttacks'] as List<dynamic>;
+        for (final attack in playerAttacks) {
+          final attackData = attack as Map<String, dynamic>;
+          final attacker = attackData['attacker'] as String;
+          final target = attackData['target'] as String;
+          final damage = attackData['damage'] as int;
+          final targetHealth = attackData['targetHealth'] as int;
+          
+          _battleLog.add('$attacker attacks $target for $damage damage!');
+          
+          // Update enemy pet health in real-time
+          final enemyPet = _enemyTeam!.firstWhere(
+            (pet) => pet.pet.name == target,
+            orElse: () => _enemyTeam!.first,
+          );
+          enemyPet.currentHealth = targetHealth;
+          enemyPet.isAlive = targetHealth > 0;
+          
+          if (targetHealth <= 0) {
+            _battleLog.add('$target is defeated!');
+          }
+          
+          // Update the UI to show health changes
+          setState(() {});
+          
+          // Wait for visual feedback
+          await Future.delayed(const Duration(milliseconds: 400));
+        }
+        
+        // Process enemy attacks
+        final enemyAttacks = turnData['enemyAttacks'] as List<dynamic>;
+        for (final attack in enemyAttacks) {
+          final attackData = attack as Map<String, dynamic>;
+          final attacker = attackData['attacker'] as String;
+          final target = attackData['target'] as String;
+          final damage = attackData['damage'] as int;
+          final targetHealth = attackData['targetHealth'] as int;
+          
+          _battleLog.add('$attacker attacks $target for $damage damage!');
+          
+          // Update player pet health in real-time
+          final playerPet = _playerTeam!.firstWhere(
+            (pet) => pet.pet.name == target,
+            orElse: () => _playerTeam!.first,
+          );
+          playerPet.currentHealth = targetHealth;
+          playerPet.isAlive = targetHealth > 0;
+          
+          if (targetHealth <= 0) {
+            _battleLog.add('$target is defeated!');
+          }
+          
+          // Update the UI to show health changes
+          setState(() {});
+          
+          // Wait for visual feedback
+          await Future.delayed(const Duration(milliseconds: 400));
+        }
+        
+        // Wait between turns
+        await Future.delayed(const Duration(milliseconds: 200));
+      }
+    }
   }
 
   void _quickPlayBattle() async {
@@ -817,17 +1064,41 @@ class _BattleGameScreenState extends State<BattleGameScreen>
       _isBattleAnimating = true;
     });
     
-    // Simulate the entire battle instantly
-    while (!_battleEnded) {
-      if (_isPlayerTurn) {
-        _executePlayerTurn();
-      } else {
-        _executeEnemyTurn();
-      }
-    }
+    // Use the proper battle service for consistent results
+    final gameProvider = Provider.of<GameProvider>(context, listen: false);
+    final currentRound = gameProvider.userProgress?.currentRound ?? 1;
     
-    setState(() {
-      _isBattleAnimating = false;
-    });
+    try {
+      final battleResult = BattleService.simulateBattle(
+        playerTeam: _playerTeam!,
+        enemyTeam: _enemyTeam!,
+        battleId: DateTime.now().millisecondsSinceEpoch.toString(),
+        currentRound: currentRound,
+      );
+      
+      // Update the battle pets' health to match the battle result
+      _updateBattlePetsHealth(battleResult);
+      
+      // Update the battle state based on the result
+      setState(() {
+        _battleResult = battleResult.isVictory ? 'Victory!' : 'Defeat!';
+        _battleResultData = battleResult;
+        _battleEnded = true;
+        _isPlayerTurn = false;
+        _isBattleAnimating = false;
+      });
+      
+      // Add result to battle log
+      _battleLog.add(battleResult.isVictory ? 'You won the battle!' : 'You lost the battle!');
+      
+      // Save battle result and update user progress
+      _saveBattleResult();
+      
+    } catch (e) {
+      print('Error in quick play battle: $e');
+      setState(() {
+        _isBattleAnimating = false;
+      });
+    }
   }
 }
