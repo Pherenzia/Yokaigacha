@@ -35,6 +35,12 @@ class GachaProvider extends ChangeNotifier {
   int get tenPullCost => _tenPullCost;
   int get premiumPullCost => _premiumPullCost;
 
+  // Clear error
+  void clearError() {
+    _error = null;
+    notifyListeners();
+  }
+
   // Initialize gacha system
   Future<void> initializeGacha() async {
     _setLoading(true);
@@ -52,12 +58,12 @@ class GachaProvider extends ChangeNotifier {
   }
 
   // Single pull
-  Future<GachaResult?> performSinglePull({bool useGems = false}) async {
+  Future<GachaResult?> performSinglePull({bool useGems = false, required UserProgress userProgress}) async {
     if (_isLoading) return null;
     
     _setLoading(true);
     try {
-      final result = await _performPull(useGems: useGems);
+      final result = await _performPull(useGems: useGems, userProgress: userProgress);
       if (result != null) {
         await StorageService.saveGachaResult(result);
         _gachaHistory.insert(0, result);
@@ -74,23 +80,37 @@ class GachaProvider extends ChangeNotifier {
   }
 
   // Ten pull (guaranteed rare or better)
-  Future<List<GachaResult>> performTenPull({bool useGems = false}) async {
+  Future<List<GachaResult>> performTenPull({bool useGems = false, required UserProgress userProgress}) async {
     if (_isLoading) return [];
     
     _setLoading(true);
     try {
+      // Check if user can afford ten pulls
+      final totalCost = useGems ? (_premiumPullCost * 10) : _tenPullCost;
+      final hasEnoughCurrency = useGems 
+          ? (userProgress.gems >= totalCost)
+          : (userProgress.coins >= totalCost);
+      
+      if (!hasEnoughCurrency) {
+        _error = useGems 
+            ? 'Not enough gems! Need $totalCost gems for ten pulls.'
+            : 'Not enough coins! Need $totalCost coins for ten pulls.';
+        notifyListeners();
+        return [];
+      }
+      
       final results = <GachaResult>[];
       
       // Perform 9 regular pulls
       for (int i = 0; i < 9; i++) {
-        final result = await _performPull(useGems: useGems);
+        final result = await _performPull(useGems: useGems, userProgress: userProgress);
         if (result != null) {
           results.add(result);
         }
       }
       
       // 10th pull is guaranteed rare or better
-      final guaranteedResult = await _performGuaranteedPull(useGems: useGems);
+      final guaranteedResult = await _performGuaranteedPull(useGems: useGems, userProgress: userProgress);
       if (guaranteedResult != null) {
         results.add(guaranteedResult);
       }
@@ -113,7 +133,27 @@ class GachaProvider extends ChangeNotifier {
   }
 
   // Perform a single pull
-  Future<GachaResult?> _performPull({bool useGems = false}) async {
+  Future<GachaResult?> _performPull({bool useGems = false, required UserProgress userProgress}) async {
+    final cost = useGems ? _premiumPullCost : _singlePullCost;
+    final hasEnoughCurrency = useGems 
+        ? (userProgress.gems >= cost)
+        : (userProgress.coins >= cost);
+    
+    if (!hasEnoughCurrency) {
+      _error = useGems 
+          ? 'Not enough gems! Need $cost gems.'
+          : 'Not enough coins! Need $cost coins.';
+      notifyListeners();
+      return null;
+    }
+    
+    // Deduct currency by updating user progress
+    final updatedProgress = userProgress.copyWith(
+      coins: useGems ? userProgress.coins : userProgress.coins - cost,
+      gems: useGems ? userProgress.gems - cost : userProgress.gems,
+    );
+    await StorageService.saveUserProgress(updatedProgress);
+    
     final rarity = _determineRarity();
     final pet = await _generatePet(rarity);
     
@@ -135,12 +175,32 @@ class GachaProvider extends ChangeNotifier {
       rarity: rarity,
       isNewVariant: isNewVariant,
       timestamp: DateTime.now(),
-      cost: useGems ? _premiumPullCost : _singlePullCost,
+      cost: cost,
     );
   }
 
   // Perform a guaranteed rare or better pull
-  Future<GachaResult?> _performGuaranteedPull({bool useGems = false}) async {
+  Future<GachaResult?> _performGuaranteedPull({bool useGems = false, required UserProgress userProgress}) async {
+    final cost = useGems ? _premiumPullCost : _singlePullCost;
+    final hasEnoughCurrency = useGems 
+        ? (userProgress.gems >= cost)
+        : (userProgress.coins >= cost);
+    
+    if (!hasEnoughCurrency) {
+      _error = useGems 
+          ? 'Not enough gems! Need $cost gems.'
+          : 'Not enough coins! Need $cost coins.';
+      notifyListeners();
+      return null;
+    }
+    
+    // Deduct currency by updating user progress
+    final updatedProgress = userProgress.copyWith(
+      coins: useGems ? userProgress.coins : userProgress.coins - cost,
+      gems: useGems ? userProgress.gems - cost : userProgress.gems,
+    );
+    await StorageService.saveUserProgress(updatedProgress);
+    
     // Guaranteed rare or better
     final guaranteedRarities = [PetRarity.rare, PetRarity.epic, PetRarity.legendary];
     final rarity = guaranteedRarities[_random.nextInt(guaranteedRarities.length)];
@@ -163,7 +223,7 @@ class GachaProvider extends ChangeNotifier {
       rarity: rarity,
       isNewVariant: isNewVariant,
       timestamp: DateTime.now(),
-      cost: useGems ? _premiumPullCost : _singlePullCost,
+      cost: cost,
     );
   }
 
@@ -310,11 +370,6 @@ class GachaProvider extends ChangeNotifier {
   // Utility Methods
   void _setLoading(bool loading) {
     _isLoading = loading;
-    notifyListeners();
-  }
-
-  void clearError() {
-    _error = null;
     notifyListeners();
   }
 

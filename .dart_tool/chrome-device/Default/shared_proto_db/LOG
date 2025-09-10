@@ -1,10 +1,8 @@
-2025/09/10-12:24:10.859 6608 Reusing MANIFEST C:\Users\kaiga\AppData\Local\Temp\flutter_tools.178ace3c\flutter_tools_chrome_device.da37bbc4\Default\shared_proto_db/MANIFEST-000001
-2025/09/10-12:24:10.860 6608 Recovering log #13
-2025/09/10-12:24:10.862 6608 Reusing old log C:\Users\kaiga\AppData\Local\Temp\flutter_tools.178ace3c\flutter_tools_chrome_device.da37bbc4\Default\shared_proto_db/000013.log 
-2025/09/10-12:24:10.862 6608 Delete type=0 #3
-2025/09/10-12:24:10.863 6608 Delete type=0 #4
-2025/09/10-12:24:10.863 6608 Delete type=0 #7
-2025/09/10-12:24:10.863 6608 Delete type=0 #10
-2025/09/10-12:25:10.645 5b14 Level-0 table #17: started
-2025/09/10-12:25:10.655 5b14 Level-0 table #17: 134902 bytes OK
-2025/09/10-12:25:10.661 5b14 Delete type=0 #13
+2025/09/10-13:44:42.088 7560 Reusing MANIFEST C:\Users\kaiga\AppData\Local\Temp\flutter_tools.b0645138\flutter_tools_chrome_device.cd98792\Default\shared_proto_db/MANIFEST-000001
+2025/09/10-13:44:42.089 7560 Recovering log #16
+2025/09/10-13:44:42.090 7560 Reusing old log C:\Users\kaiga\AppData\Local\Temp\flutter_tools.b0645138\flutter_tools_chrome_device.cd98792\Default\shared_proto_db/000016.log 
+2025/09/10-13:44:42.090 7560 Delete type=0 #3
+2025/09/10-13:44:42.090 7560 Delete type=0 #4
+2025/09/10-13:44:42.091 7560 Delete type=0 #7
+2025/09/10-13:44:42.091 7560 Delete type=0 #10
+2025/09/10-13:44:42.091 7560 Delete type=0 #13

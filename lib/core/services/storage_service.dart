@@ -36,7 +36,7 @@ class StorageService {
   static Future<void> saveUserProgress(UserProgress progress) async {
     try {
       // Use SharedPreferences for now
-      await _prefs.setString('user_progress', progress.toJson().toString());
+      await _prefs.setString('user_progress', jsonEncode(progress.toJson()));
     } catch (e) {
       print('Failed to save user progress: $e');
     }
@@ -51,14 +51,35 @@ class StorageService {
       }
     } catch (e) {
       print('Failed to get user progress: $e');
+      // Clear corrupted data
+      _prefs.remove('user_progress');
     }
     return null;
   }
 
+  // Clear all corrupted data
+  static Future<void> clearCorruptedData() async {
+    try {
+      await _prefs.remove('user_progress');
+      await _prefs.remove('pets');
+      await _prefs.remove('battle_results');
+      await _prefs.remove('gacha_results');
+      await _prefs.remove('achievements');
+      print('Cleared corrupted data');
+    } catch (e) {
+      print('Failed to clear corrupted data: $e');
+    }
+  }
+
   static Future<UserProgress> getOrCreateUserProgress(String userId) async {
-    final existing = getUserProgress();
-    if (existing != null) {
-      return existing;
+    try {
+      final existing = getUserProgress();
+      if (existing != null) {
+        return existing;
+      }
+    } catch (e) {
+      print('Corrupted user progress detected, clearing data: $e');
+      await clearCorruptedData();
     }
     
     final newProgress = UserProgress.initial(userId);

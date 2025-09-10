@@ -108,6 +108,7 @@ class _GachaScreenState extends State<GachaScreen> with TickerProviderStateMixin
           const SizedBox(height: 20),
           _buildPullButtons(
             gachaProvider,
+            userProvider,
             canAffordSingle,
             canAffordTen,
             canAffordPremium,
@@ -187,6 +188,7 @@ class _GachaScreenState extends State<GachaScreen> with TickerProviderStateMixin
 
   Widget _buildPullButtons(
     GachaProvider gachaProvider,
+    UserProgressProvider userProvider,
     bool canAffordSingle,
     bool canAffordTen,
     bool canAffordPremium,
@@ -200,7 +202,7 @@ class _GachaScreenState extends State<GachaScreen> with TickerProviderStateMixin
             icon: Icons.card_giftcard,
             color: AppTheme.primaryColor,
             enabled: canAffordSingle,
-            onTap: () => _performSinglePull(gachaProvider, false),
+            onTap: () => _performSinglePull(gachaProvider, false, userProvider),
           ),
         ),
         const SizedBox(width: 12),
@@ -211,7 +213,7 @@ class _GachaScreenState extends State<GachaScreen> with TickerProviderStateMixin
             icon: Icons.ten_k,
             color: AppTheme.secondaryColor,
             enabled: canAffordTen,
-            onTap: () => _performTenPull(gachaProvider),
+            onTap: () => _performTenPull(gachaProvider, userProvider),
           ),
         ),
         const SizedBox(width: 12),
@@ -222,7 +224,7 @@ class _GachaScreenState extends State<GachaScreen> with TickerProviderStateMixin
             icon: Icons.diamond,
             color: AppTheme.accentColor,
             enabled: canAffordPremium,
-            onTap: () => _performSinglePull(gachaProvider, true),
+            onTap: () => _performSinglePull(gachaProvider, true, userProvider),
           ),
         ),
       ],
@@ -412,27 +414,41 @@ class _GachaScreenState extends State<GachaScreen> with TickerProviderStateMixin
     }
   }
 
-  Future<void> _performSinglePull(GachaProvider gachaProvider, bool useGems) async {
+  Future<void> _performSinglePull(GachaProvider gachaProvider, bool useGems, UserProgressProvider userProvider) async {
+    gachaProvider.clearError();
+    
     _pullAnimationController.forward().then((_) {
       _pullAnimationController.reset();
     });
     
-    final result = await gachaProvider.performSinglePull(useGems: useGems);
+    final userProgress = userProvider.userProgress;
+    if (userProgress == null) return;
+    
+    final result = await gachaProvider.performSinglePull(useGems: useGems, userProgress: userProgress);
     
     if (result != null && mounted) {
       _showPullResult(result);
+      // Refresh user progress to show updated currency
+      userProvider.refreshUserProgress();
     }
   }
 
-  Future<void> _performTenPull(GachaProvider gachaProvider) async {
+  Future<void> _performTenPull(GachaProvider gachaProvider, UserProgressProvider userProvider) async {
+    gachaProvider.clearError();
+    
     _pullAnimationController.forward().then((_) {
       _pullAnimationController.reset();
     });
     
-    final results = await gachaProvider.performTenPull();
+    final userProgress = userProvider.userProgress;
+    if (userProgress == null) return;
+    
+    final results = await gachaProvider.performTenPull(userProgress: userProgress);
     
     if (results.isNotEmpty && mounted) {
       _showTenPullResults(results);
+      // Refresh user progress to show updated currency
+      userProvider.refreshUserProgress();
     }
   }
 

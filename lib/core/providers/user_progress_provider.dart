@@ -345,5 +345,17 @@ class UserProgressProvider extends ChangeNotifier {
       'totalAchievements': _achievements.length,
     };
   }
+
+  // Refresh user progress from storage
+  Future<void> refreshUserProgress() async {
+    try {
+      _userProgress = await StorageService.getOrCreateUserProgress('default_user');
+      notifyListeners();
+    } catch (e) {
+      if (kDebugMode) {
+        print('Failed to refresh user progress: $e');
+      }
+    }
+  }
 }
 
