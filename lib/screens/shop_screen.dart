@@ -16,9 +16,10 @@ class ShopScreen extends StatefulWidget {
 
 class _ShopScreenState extends State<ShopScreen> {
   List<Pet> _availablePets = [];
+  List<Pet> _filteredPets = [];
   List<Pet> _selectedPets = [];
   bool _isLoading = true;
-  int _shopTier = 1;
+  PetRarity? _selectedRarity; // null means "All"
 
   @override
   void initState() {
@@ -36,8 +37,11 @@ class _ShopScreenState extends State<ShopScreen> {
       final allPets = StorageService.getAllPets();
       final unlockedPets = allPets.where((pet) => pet.isUnlocked).toList();
       
-      // Filter pets by shop tier (higher tier = better pets)
-      _availablePets = _getPetsForTier(unlockedPets, _shopTier);
+      // Store all available pets
+      _availablePets = unlockedPets;
+      
+      // Apply rarity filter
+      _applyRarityFilter();
       
       setState(() {
         _isLoading = false;
@@ -49,29 +53,23 @@ class _ShopScreenState extends State<ShopScreen> {
     }
   }
 
-  List<Pet> _getPetsForTier(List<Pet> pets, int tier) {
-    // Shop tier determines which pets are available
-    // Tier 1: Common pets only
-    // Tier 2: Common + Rare pets
-    // Tier 3: Common + Rare + Epic pets
-    // Tier 4: All pets including Legendary
-    
-    switch (tier) {
-      case 1:
-        return pets.where((pet) => pet.rarity == PetRarity.common).toList();
-      case 2:
-        return pets.where((pet) => 
-          pet.rarity == PetRarity.common || pet.rarity == PetRarity.rare).toList();
-      case 3:
-        return pets.where((pet) => 
-          pet.rarity == PetRarity.common || 
-          pet.rarity == PetRarity.rare || 
-          pet.rarity == PetRarity.epic).toList();
-      case 4:
-        return pets; // All pets
-      default:
-        return pets.where((pet) => pet.rarity == PetRarity.common).toList();
+  void _applyRarityFilter() {
+    if (_selectedRarity == null) {
+      // Show all rarities
+      _filteredPets = List.from(_availablePets);
+    } else {
+      // Filter by selected rarity
+      _filteredPets = _availablePets
+          .where((pet) => pet.rarity == _selectedRarity)
+          .toList();
     }
+  }
+
+  void _onRarityFilterChanged(PetRarity? rarity) {
+    setState(() {
+      _selectedRarity = rarity;
+      _applyRarityFilter();
+    });
   }
 
   int _getPetSpiritCost(Pet pet) {
@@ -100,7 +98,7 @@ class _ShopScreenState extends State<ShopScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Team Builder - Tier $_shopTier'),
+        title: const Text('Team Builder'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
@@ -188,47 +186,71 @@ class _ShopScreenState extends State<ShopScreen> {
               );
             },
           ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildTierButton(1, 'Tier 1'),
-              _buildTierButton(2, 'Tier 2'),
-              _buildTierButton(3, 'Tier 3'),
-              _buildTierButton(4, 'Tier 4'),
-            ],
-          ),
+          const SizedBox(height: 16),
+          _buildRarityFilter(),
         ],
       ),
     );
   }
 
-  Widget _buildTierButton(int tier, String label) {
-    final isSelected = _shopTier == tier;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _shopTier = tier;
-        });
-        _loadShopData();
+  Widget _buildRarityFilter() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Filter by Rarity',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildFilterChip('All', null),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('Common', PetRarity.common),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('Rare', PetRarity.rare),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('Epic', PetRarity.epic),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('Legendary', PetRarity.legendary),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String label, PetRarity? rarity) {
+    final isSelected = _selectedRarity == rarity;
+    final rarityColor = rarity != null ? _getRarityColor(rarity) : AppTheme.primaryColor;
+    
+    return FilterChip(
+      label: Text(
+        label,
+        style: TextStyle(
+          color: isSelected ? Colors.white : rarityColor,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      selected: isSelected,
+      onSelected: (selected) {
+        _onRarityFilterChanged(selected ? rarity : null);
       },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primaryColor : AppTheme.surfaceColor,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? AppTheme.primaryColor : AppTheme.dividerColor,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : AppTheme.primaryTextColor,
-            fontWeight: FontWeight.bold,
-            fontSize: 12,
-          ),
-        ),
+      backgroundColor: rarityColor.withOpacity(0.1),
+      selectedColor: rarityColor,
+      checkmarkColor: Colors.white,
+      side: BorderSide(
+        color: rarityColor.withOpacity(0.3),
+        width: 1,
       ),
     );
   }
@@ -334,6 +356,35 @@ class _ShopScreenState extends State<ShopScreen> {
   }
 
   Widget _buildPetGrid() {
+    if (_filteredPets.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search_off,
+              size: 64,
+              color: AppTheme.secondaryTextColor.withOpacity(0.5),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No pets found',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: AppTheme.secondaryTextColor,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Try selecting a different rarity filter',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppTheme.secondaryTextColor,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return GridView.builder(
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -342,9 +393,9 @@ class _ShopScreenState extends State<ShopScreen> {
         mainAxisSpacing: 16,
         childAspectRatio: 0.8, // Adjusted for better layout
       ),
-      itemCount: _availablePets.length,
+      itemCount: _filteredPets.length,
       itemBuilder: (context, index) {
-        return _buildPetCard(_availablePets[index]);
+        return _buildPetCard(_filteredPets[index]);
       },
     );
   }
