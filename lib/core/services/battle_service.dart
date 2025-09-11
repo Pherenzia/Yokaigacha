@@ -178,23 +178,23 @@ class BattleService {
     int experienceEarned = 0;
     
     if (playerWon) {
-      // Base rewards: +2 coins per round level, +1 XP per round level
-      coinsEarned = currentRound * 2;
+      // Base rewards: +5 coins per round level, +1 XP per round level
+      coinsEarned = currentRound * 5;
       experienceEarned = currentRound;
       
-      // Bonus for every 5th round: +5 coins and +2 XP
+      // Bonus for every 5th round: +10 coins and +2 XP
       if (currentRound % 5 == 0) {
-        coinsEarned += 5;
+        coinsEarned += 10;
         experienceEarned += 2;
       }
     } else {
       // Reduced rewards for defeat: half the base rewards
-      coinsEarned = (currentRound * 2) ~/ 2;
+      coinsEarned = (currentRound * 5) ~/ 2;
       experienceEarned = currentRound ~/ 2;
       
       // Still get bonus for 5th rounds, but reduced
       if (currentRound % 5 == 0) {
-        coinsEarned += 2;
+        coinsEarned += 5;
         experienceEarned += 1;
       }
     }
@@ -472,27 +472,27 @@ class BattleService {
 
   /// Scale stats based on current round
   static int _scaleStat(int baseStat, int currentRound, String statType, {bool isBoss = false}) {
-    // Base scaling: each round increases stats
-    int scaling = currentRound - 1;
+    // Base scaling: each round increases stats (reduced from before)
+    int scaling = (currentRound - 1) ~/ 2; // Half the base scaling
     
-    // Additional scaling for higher rounds
+    // Additional scaling for higher rounds (reduced)
     if (currentRound > 5) {
-      scaling += (currentRound - 5) * 2; // Extra scaling after round 5
+      scaling += (currentRound - 5); // Reduced from * 2 to * 1
     }
     
     if (currentRound > 10) {
-      scaling += (currentRound - 10) * 3; // Even more scaling after round 10
+      scaling += (currentRound - 10) ~/ 2; // Reduced from * 3 to * 0.5
     }
     
-    // Boss rounds get significant additional scaling
+    // Boss rounds get moderate additional scaling (reduced)
     if (isBoss) {
-      scaling += (currentRound ~/ 10) * 5; // Extra scaling for boss rounds
+      scaling += (currentRound ~/ 10) * 2; // Reduced from * 5 to * 2
     }
     
     // Apply scaling to the stat
     if (statType == 'health') {
-      // Health gets more scaling than attack for tankiness
-      return baseStat + (scaling * 1.5).round();
+      // Health gets slightly more scaling than attack for tankiness
+      return baseStat + (scaling * 1.2).round(); // Reduced from 1.5 to 1.2
     } else if (statType == 'attack') {
       return baseStat + scaling;
     }

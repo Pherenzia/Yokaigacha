@@ -376,7 +376,10 @@ class _BattleGameScreenState extends State<BattleGameScreen>
 
   Widget _buildPetCard(BattlePet battlePet, bool isEnemy) {
     final pet = battlePet.pet;
-    final healthPercentage = battlePet.currentHealth / pet.currentHealth;
+    final originalMaxHealth = isEnemy 
+        ? (_originalEnemyHealth[pet.id] ?? pet.baseHealth)
+        : (_originalPlayerHealth[pet.id] ?? pet.baseHealth);
+    final healthPercentage = battlePet.currentHealth / originalMaxHealth;
     
     return Container(
       width: 100,
@@ -442,7 +445,7 @@ class _BattleGameScreenState extends State<BattleGameScreen>
           const SizedBox(height: 2),
           // Stats
           Text(
-            '${battlePet.currentHealth}/${pet.currentHealth} HP',
+            '${battlePet.currentHealth}/$originalMaxHealth HP',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               fontSize: 10,
             ),

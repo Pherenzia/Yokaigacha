@@ -530,7 +530,24 @@ class _ShopScreenState extends State<ShopScreen> {
     if ((userProgress.userProgress?.coins ?? 0) < cost) return;
     
     setState(() {
-      _selectedPets.add(pet);
+      // Create a copy of the pet with a unique ID
+      final uniquePet = Pet(
+        id: '${pet.id}_${DateTime.now().millisecondsSinceEpoch}_${_selectedPets.length}',
+        name: pet.name,
+        description: pet.description,
+        rarity: pet.rarity,
+        type: pet.type,
+        baseAttack: pet.baseAttack,
+        baseHealth: pet.baseHealth,
+        level: pet.level,
+        experience: pet.experience,
+        abilities: pet.abilities,
+        imagePath: pet.imagePath,
+        variantId: pet.variantId,
+        isUnlocked: pet.isUnlocked,
+        unlockDate: pet.unlockDate,
+      );
+      _selectedPets.add(uniquePet);
     });
     
     // Deduct coins
