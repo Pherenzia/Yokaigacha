@@ -74,42 +74,61 @@ class _ShopScreenState extends State<ShopScreen> {
     }
   }
 
-  int _getPetCost(Pet pet) {
-    // Cost based on rarity and tier
-    int baseCost = 3; // Base cost for common pets
-    
+  int _getPetSpiritCost(Pet pet) {
+    // Spirit costs based on rarity (no tier multiplier for spirit)
     switch (pet.rarity) {
       case PetRarity.common:
-        baseCost = 3;
-        break;
+        return 2;
       case PetRarity.rare:
-        baseCost = 6;
-        break;
+        return 3;
       case PetRarity.epic:
-        baseCost = 9;
-        break;
+        return 4;
       case PetRarity.legendary:
-        baseCost = 12;
-        break;
+        return 5;
     }
-    
-    // Add tier multiplier
-    return baseCost * _shopTier;
+  }
+  
+  int _getUsedSpirit() {
+    int usedSpirit = 0;
+    for (Pet pet in _selectedPets) {
+      usedSpirit += _getPetSpiritCost(pet);
+    }
+    return usedSpirit;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Shop - Tier $_shopTier'),
+        title: Text('Team Builder - Tier $_shopTier'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        actions: const [
+        actions: [
           Padding(
-            padding: EdgeInsets.only(right: 16),
-            child: CurrencyDisplay(),
+            padding: const EdgeInsets.only(right: 16),
+            child: Consumer<UserProgressProvider>(
+              builder: (context, userProgress, child) {
+                final totalSpirit = userProgress.userProgress?.totalSpirit ?? 12;
+                final usedSpirit = _getUsedSpirit();
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.auto_awesome, color: AppTheme.accentColor),
+                    const SizedBox(width: 4),
+                    Text(
+                      '$usedSpirit/$totalSpirit',
+                      style: TextStyle(
+                        color: AppTheme.accentColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
           ),
         ],
         backgroundColor: Colors.transparent,
@@ -150,10 +169,24 @@ class _ShopScreenState extends State<ShopScreen> {
       child: Column(
         children: [
           Text(
-            'Select up to 5 pets for your team',
+            'Build your team using Spirit',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
             ),
+          ),
+          const SizedBox(height: 4),
+          Consumer<UserProgressProvider>(
+            builder: (context, userProgress, child) {
+              final totalSpirit = userProgress.userProgress?.totalSpirit ?? 12;
+              final usedSpirit = _getUsedSpirit();
+              return Text(
+                'Spirit: $usedSpirit/$totalSpirit (Common: 2, Rare: 3, Epic: 4, Legendary: 5)',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppTheme.secondaryTextColor,
+                ),
+                textAlign: TextAlign.center,
+              );
+            },
           ),
           const SizedBox(height: 8),
           Row(
@@ -256,6 +289,16 @@ class _ShopScreenState extends State<ShopScreen> {
               '${pet.baseAttack}/${pet.baseHealth}',
               style: const TextStyle(fontSize: 8),
             ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.auto_awesome, size: 10, color: AppTheme.accentColor),
+                Text(
+                  '${_getPetSpiritCost(pet)}',
+                  style: TextStyle(fontSize: 8, color: AppTheme.accentColor),
+                ),
+              ],
+            ),
             IconButton(
               icon: const Icon(Icons.remove_circle, size: 16),
               onPressed: () => _removePet(index),
@@ -307,9 +350,9 @@ class _ShopScreenState extends State<ShopScreen> {
   }
 
   Widget _buildPetCard(Pet pet) {
-    final cost = _getPetCost(pet);
+    final spiritCost = _getPetSpiritCost(pet);
     final isSelected = _selectedPets.contains(pet);
-    final canAfford = _canAffordPet(cost);
+    final canAfford = _canAffordSpirit(spiritCost);
     final canSelect = _selectedPets.length < 5 && !isSelected;
     final rarityColor = _getRarityColor(pet.rarity);
 
@@ -412,20 +455,26 @@ class _ShopScreenState extends State<ShopScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          '$cost coins',
-                          style: TextStyle(
-                            color: canAfford ? AppTheme.successColor : AppTheme.errorColor,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
+                        Row(
+                          children: [
+                            Icon(Icons.auto_awesome, size: 16, color: AppTheme.accentColor),
+                            const SizedBox(width: 4),
+                            Text(
+                              '$spiritCost',
+                              style: TextStyle(
+                                color: canAfford ? AppTheme.successColor : AppTheme.errorColor,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
                         ),
                         if (isSelected)
                           const Icon(Icons.check_circle, color: AppTheme.successColor, size: 24)
                         else if (canSelect && canAfford)
                           IconButton(
                             icon: const Icon(Icons.add_circle, size: 28),
-                            onPressed: () => _selectPet(pet, cost),
+                            onPressed: () => _selectPet(pet, spiritCost),
                             color: rarityColor,
                           )
                         else
@@ -505,7 +554,7 @@ class _ShopScreenState extends State<ShopScreen> {
                 minimumSize: const Size(double.infinity, 50),
               ),
               child: Text(
-                'Start Battle (${_selectedPets.length} pets)',
+                'Start Battle (${_selectedPets.length} pets, ${_getUsedSpirit()} Spirit)',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -518,16 +567,17 @@ class _ShopScreenState extends State<ShopScreen> {
     );
   }
 
-  bool _canAffordPet(int cost) {
+  bool _canAffordSpirit(int spiritCost) {
     final userProgress = Provider.of<UserProgressProvider>(context, listen: false);
-    return (userProgress.userProgress?.coins ?? 0) >= cost;
+    final totalSpirit = userProgress.userProgress?.totalSpirit ?? 12;
+    final usedSpirit = _getUsedSpirit();
+    return (usedSpirit + spiritCost) <= totalSpirit;
   }
 
-  void _selectPet(Pet pet, int cost) {
+  void _selectPet(Pet pet, int spiritCost) {
     if (_selectedPets.length >= 5) return;
     
-    final userProgress = Provider.of<UserProgressProvider>(context, listen: false);
-    if ((userProgress.userProgress?.coins ?? 0) < cost) return;
+    if (!_canAffordSpirit(spiritCost)) return;
     
     setState(() {
       // Create a copy of the pet with a unique ID
@@ -550,8 +600,7 @@ class _ShopScreenState extends State<ShopScreen> {
       _selectedPets.add(uniquePet);
     });
     
-    // Deduct coins
-    userProgress.addCoins(-cost);
+    // Spirit is not consumed - it's just a limit
   }
 
   void _removePet(int index) {

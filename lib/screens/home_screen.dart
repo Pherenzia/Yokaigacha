@@ -282,9 +282,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             childAspectRatio: 1.2,
             children: [
               MainMenuButton(
-                title: 'Shop',
-                subtitle: 'Buy pets for battle',
-                icon: Icons.store,
+                title: 'Team Builder',
+                subtitle: 'Build your battle team',
+                icon: Icons.group,
                 color: AppTheme.primaryColor,
                 onTap: () => _navigateToScreen(const ShopScreen()),
               ),

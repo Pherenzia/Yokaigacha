@@ -253,6 +253,7 @@ class UserProgressProvider extends ChangeNotifier {
       petUsageStats: _userProgress!.petUsageStats,
       achievements: [..._userProgress!.achievements, achievement.id],
       currentRound: _userProgress!.currentRound,
+      spirit: _userProgress!.spirit,
     );
     
     // Save directly without triggering achievement checks to avoid infinite loop
@@ -305,6 +306,7 @@ class UserProgressProvider extends ChangeNotifier {
         petUsageStats: _userProgress!.petUsageStats,
         achievements: _userProgress!.achievements,
         currentRound: _userProgress!.currentRound,
+        spirit: _userProgress!.spirit,
       );
       
       await updateUserProgress(updatedProgress);

@@ -93,9 +93,13 @@ class GameProvider extends ChangeNotifier {
       newLevel++;
     }
     
+    // Calculate new spirit based on new level (11 + level)
+    int newSpirit = 11 + newLevel;
+    
     final updatedProgress = _userProgress!.copyWith(
       level: newLevel,
       experience: newExperience,
+      spirit: newSpirit,
       lastPlayDate: DateTime.now(),
     );
     

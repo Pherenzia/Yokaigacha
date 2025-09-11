@@ -51,6 +51,9 @@ class UserProgress {
   
   @HiveField(14)
   final int currentRound;
+  
+  @HiveField(15)
+  final int spirit;
 
   const UserProgress({
     required this.userId,
@@ -68,6 +71,7 @@ class UserProgress {
     required this.petUsageStats,
     required this.achievements,
     required this.currentRound,
+    required this.spirit,
   });
 
   factory UserProgress.initial(String userId) {
@@ -87,6 +91,7 @@ class UserProgress {
       petUsageStats: {},
       achievements: [],
       currentRound: 1,
+      spirit: 12, // 11 + level (1) = 12 spirit
     );
   }
 
@@ -109,6 +114,7 @@ class UserProgress {
     Map<String, int>? petUsageStats,
     List<String>? achievements,
     int? currentRound,
+    int? spirit,
   }) {
     return UserProgress(
       userId: userId ?? this.userId,
@@ -126,8 +132,12 @@ class UserProgress {
       petUsageStats: petUsageStats ?? this.petUsageStats,
       achievements: achievements ?? this.achievements,
       currentRound: currentRound ?? this.currentRound,
+      spirit: spirit ?? this.spirit,
     );
   }
+  
+  // Calculate total spirit based on level (11 + level)
+  int get totalSpirit => 11 + level;
 }
 
 @HiveType(typeId: 6)
