@@ -29,6 +29,8 @@ class CollectionScreen extends StatefulWidget {
 class _CollectionScreenState extends State<CollectionScreen> {
   List<Pet> _userPets = [];
   List<PetCollectionItem> _collectionItems = [];
+  List<PetCollectionItem> _filteredItems = [];
+  PetRarity? _selectedRarity; // null means "All"
   bool _isLoading = true;
 
   @override
@@ -99,6 +101,7 @@ class _CollectionScreenState extends State<CollectionScreen> {
       setState(() {
         _userPets = pets;
         _collectionItems = collectionItems;
+        _applyFilter();
         _isLoading = false;
       });
     } catch (e) {
@@ -106,6 +109,25 @@ class _CollectionScreenState extends State<CollectionScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  void _applyFilter() {
+    if (_selectedRarity == null) {
+      // Show all rarities
+      _filteredItems = List.from(_collectionItems);
+    } else {
+      // Filter by selected rarity
+      _filteredItems = _collectionItems
+          .where((item) => item.pet.rarity == _selectedRarity)
+          .toList();
+    }
+  }
+
+  void _onRarityFilterChanged(PetRarity? rarity) {
+    setState(() {
+      _selectedRarity = rarity;
+      _applyFilter();
+    });
   }
 
   @override
@@ -131,8 +153,8 @@ class _CollectionScreenState extends State<CollectionScreen> {
   }
 
   Widget _buildCollectionContent() {
-    final unlockedItems = _collectionItems.where((item) => item.pet.isUnlocked).length;
-    final totalItems = _collectionItems.length;
+    final unlockedItems = _filteredItems.where((item) => item.pet.isUnlocked).length;
+    final totalItems = _filteredItems.length;
     final totalPetCount = _userPets.length; // Total individual pets
 
     return Padding(
@@ -140,6 +162,8 @@ class _CollectionScreenState extends State<CollectionScreen> {
       child: Column(
         children: [
           _buildCollectionStats(unlockedItems, totalItems, totalPetCount),
+          const SizedBox(height: 16),
+          _buildRarityFilter(),
           const SizedBox(height: 16),
           Expanded(
             child: _buildPetGrid(),
@@ -204,7 +228,98 @@ class _CollectionScreenState extends State<CollectionScreen> {
     );
   }
 
+  Widget _buildRarityFilter() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Filter by Rarity',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildFilterChip('All', null),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('Common', PetRarity.common),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('Rare', PetRarity.rare),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('Epic', PetRarity.epic),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('Legendary', PetRarity.legendary),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String label, PetRarity? rarity) {
+    final isSelected = _selectedRarity == rarity;
+    final rarityColor = rarity != null ? _getRarityColor(rarity) : AppTheme.primaryColor;
+    
+    return FilterChip(
+      label: Text(
+        label,
+        style: TextStyle(
+          color: isSelected ? Colors.white : rarityColor,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      selected: isSelected,
+      onSelected: (selected) {
+        _onRarityFilterChanged(selected ? rarity : null);
+      },
+      backgroundColor: rarityColor.withOpacity(0.1),
+      selectedColor: rarityColor,
+      checkmarkColor: Colors.white,
+      side: BorderSide(
+        color: rarityColor.withOpacity(0.3),
+        width: 1,
+      ),
+    );
+  }
+
   Widget _buildPetGrid() {
+    if (_filteredItems.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search_off,
+              size: 64,
+              color: AppTheme.secondaryTextColor.withOpacity(0.5),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No pets found',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: AppTheme.secondaryTextColor,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Try selecting a different rarity filter',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppTheme.secondaryTextColor,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return GridView.builder(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3, // More compact - 3 columns instead of 2
@@ -212,9 +327,9 @@ class _CollectionScreenState extends State<CollectionScreen> {
         mainAxisSpacing: 12,
         childAspectRatio: 0.65, // Slightly taller for better text readability
       ),
-      itemCount: _collectionItems.length,
+      itemCount: _filteredItems.length,
       itemBuilder: (context, index) {
-        return _buildPetCard(_collectionItems[index]);
+        return _buildPetCard(_filteredItems[index]);
       },
     );
   }
