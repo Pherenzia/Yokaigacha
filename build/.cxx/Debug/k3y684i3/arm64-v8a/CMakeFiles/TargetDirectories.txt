@@ -1,0 +1,2 @@
+C:/Users/kaiga/OneDrive/Desktop/Super Auto Pets Clone/build/.cxx/Debug/k3y684i3/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/Users/kaiga/OneDrive/Desktop/Super Auto Pets Clone/build/.cxx/Debug/k3y684i3/arm64-v8a/CMakeFiles/rebuild_cache.dir

@@ -1,0 +1,20 @@
+{
+  "buildFiles": [
+    "C:\\Users\\kaiga\\flutter\\packages\\flutter_tools\\gradle\\src\\main\\scripts\\CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "C:\\Users\\kaiga\\AppData\\Local\\Android\\sdk\\cmake\\3.22.1\\bin\\ninja.exe",
+      "-C",
+      "C:\\Users\\kaiga\\OneDrive\\Desktop\\Super Auto Pets Clone\\build\\.cxx\\Debug\\k3y684i3\\armeabi-v7a",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "C:\\Users\\kaiga\\AppData\\Local\\Android\\sdk\\cmake\\3.22.1\\bin\\ninja.exe",
+    "-C",
+    "C:\\Users\\kaiga\\OneDrive\\Desktop\\Super Auto Pets Clone\\build\\.cxx\\Debug\\k3y684i3\\armeabi-v7a",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {}
+}
