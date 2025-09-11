@@ -7,7 +7,7 @@ import '../widgets/currency_display.dart';
 import '../widgets/main_menu_button.dart';
 import 'battle_screen.dart';
 import 'battle_game_screen.dart';
-import 'shop_screen.dart';
+import 'team_builder_screen.dart';
 import 'collection_screen.dart';
 import 'gacha_screen.dart';
 import 'achievements_screen.dart';
@@ -286,7 +286,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 subtitle: 'Build your battle team',
                 icon: Icons.group,
                 color: AppTheme.primaryColor,
-                onTap: () => _navigateToScreen(const ShopScreen()),
+                onTap: () => _navigateToScreen(const TeamBuilderScreen()),
               ),
               MainMenuButton(
                 title: 'Collection',

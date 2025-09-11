@@ -78,7 +78,7 @@ class _BattleGameScreenState extends State<BattleGameScreen>
   void _initializeBattle() {
     List<Pet> petsToUse;
     
-    // Use selected pets from shop if available, otherwise use default pets
+    // Use selected pets from team builder if available, otherwise use default pets
     if (widget.selectedPets != null && widget.selectedPets!.isNotEmpty) {
       petsToUse = widget.selectedPets!;
     } else {
