@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import '../models/pet.dart';
 import '../models/game_data.dart';
 import '../data/pet_data.dart';
@@ -19,8 +20,8 @@ class BattleService {
     // Create copies of teams for battle
     List<BattlePet> playerPets = playerTeam.map((pet) => BattlePet(
       pet: pet.pet,
-      currentHealth: pet.pet.currentHealth,
-      currentAttack: pet.pet.currentAttack,
+      currentHealth: pet.currentHealth, // Use the scaled health
+      currentAttack: pet.currentAttack, // Use the scaled attack
       position: pet.position,
       activeEffects: [],
       isAlive: true,
@@ -28,8 +29,8 @@ class BattleService {
     
     List<BattlePet> enemyPets = enemyTeam.map((pet) => BattlePet(
       pet: pet.pet,
-      currentHealth: pet.pet.currentHealth,
-      currentAttack: pet.pet.currentAttack,
+      currentHealth: pet.currentHealth, // Use the scaled health
+      currentAttack: pet.currentAttack, // Use the scaled attack
       position: pet.position,
       activeEffects: [],
       isAlive: true,
@@ -37,6 +38,11 @@ class BattleService {
 
     int turnCount = 0;
     bool playerWon = false;
+
+    // Track current attacking pets for each team
+    int playerAttackerIndex = 0;
+    int enemyAttackerIndex = 0;
+    bool isPlayerTurn = true; // Start with player turn
 
     // Battle loop
     while (turnCount < 50) { // Max 50 turns to prevent infinite loops
@@ -56,51 +62,114 @@ class BattleService {
         break;
       }
 
-      // Simple battle logic: each pet attacks the first alive enemy
+      // New battle logic: Each turn alternates between player and enemy
       final turn = <String, dynamic>{
         'turn': turnCount,
         'playerAttacks': <Map<String, dynamic>>[],
         'enemyAttacks': <Map<String, dynamic>>[],
       };
 
-      // Player pets attack
-      for (final playerPet in playerAlive) {
-        final target = enemyAlive.first;
-        final damage = _calculateDamage(playerPet, target);
-        
-        target.currentHealth -= damage;
-        if (target.currentHealth <= 0) {
-          target.currentHealth = 0;
-          target.isAlive = false;
-        }
-
-        turn['playerAttacks'].add({
-          'attacker': playerPet.pet.name,
-          'target': target.pet.name,
-          'damage': damage,
-          'targetHealth': target.currentHealth,
-        });
+      // Debug: Print turn info
+      if (kDebugMode) {
+        print('Turn $turnCount (${isPlayerTurn ? 'Player' : 'Enemy'} turn):');
+        print('  Player alive: ${playerAlive.map((p) => '${p.pet.name}(${p.currentHealth}HP)').join(', ')}');
+        print('  Enemy alive: ${enemyAlive.map((p) => '${p.pet.name}(${p.currentHealth}HP)').join(', ')}');
       }
 
-      // Enemy pets attack
-      for (final enemyPet in enemyAlive) {
-        final target = playerAlive.first;
-        final damage = _calculateDamage(enemyPet, target);
-        
-        target.currentHealth -= damage;
-        if (target.currentHealth <= 0) {
-          target.currentHealth = 0;
-          target.isAlive = false;
+      if (isPlayerTurn) {
+        // Player turn: Find next alive player pet
+        BattlePet? playerAttacker;
+        while (playerAttackerIndex < playerPets.length) {
+          if (playerPets[playerAttackerIndex].isAlive) {
+            playerAttacker = playerPets[playerAttackerIndex];
+            break;
+          }
+          playerAttackerIndex++;
         }
 
-        turn['enemyAttacks'].add({
-          'attacker': enemyPet.pet.name,
-          'target': target.pet.name,
-          'damage': damage,
-          'targetHealth': target.currentHealth,
-        });
+        // Player attacks first alive enemy
+        if (playerAttacker != null && enemyAlive.isNotEmpty) {
+          final target = enemyAlive.first;
+          final damage = _calculateDamage(playerAttacker, target);
+          
+          target.currentHealth -= damage;
+          if (target.currentHealth <= 0) {
+            target.currentHealth = 0;
+            target.isAlive = false;
+          }
+
+          final attackData = {
+            'attacker': playerAttacker.pet.name,
+            'attackerId': playerAttacker.pet.id,
+            'target': target.pet.name,
+            'targetId': target.pet.id,
+            'damage': damage,
+            'targetHealth': target.currentHealth,
+          };
+          
+          turn['playerAttacks'].add(attackData);
+          
+          if (kDebugMode) {
+            print('  Player ${playerAttacker.pet.name} attacks Enemy ${target.pet.name} for $damage damage (${target.currentHealth} HP remaining)');
+          }
+        }
+      } else {
+        // Enemy turn: Find next alive enemy pet
+        BattlePet? enemyAttacker;
+        while (enemyAttackerIndex < enemyPets.length) {
+          if (enemyPets[enemyAttackerIndex].isAlive) {
+            enemyAttacker = enemyPets[enemyAttackerIndex];
+            break;
+          }
+          enemyAttackerIndex++;
+        }
+
+        // Enemy attacks first alive player
+        if (enemyAttacker != null && playerAlive.isNotEmpty) {
+          final target = playerAlive.first;
+          final damage = _calculateDamage(enemyAttacker, target);
+          
+          target.currentHealth -= damage;
+          if (target.currentHealth <= 0) {
+            target.currentHealth = 0;
+            target.isAlive = false;
+          }
+
+          final attackData = {
+            'attacker': enemyAttacker.pet.name,
+            'attackerId': enemyAttacker.pet.id,
+            'target': target.pet.name,
+            'targetId': target.pet.id,
+            'damage': damage,
+            'targetHealth': target.currentHealth,
+          };
+          
+          turn['enemyAttacks'].add(attackData);
+          
+          if (kDebugMode) {
+            print('  Enemy ${enemyAttacker.pet.name} attacks Player ${target.pet.name} for $damage damage (${target.currentHealth} HP remaining)');
+          }
+        }
       }
 
+      // Check if battle is over after the attack
+      final finalPlayerAlive = playerPets.where((pet) => pet.isAlive).toList();
+      final finalEnemyAlive = enemyPets.where((pet) => pet.isAlive).toList();
+      
+      if (finalPlayerAlive.isEmpty) {
+        playerWon = false;
+        turns.add(turn);
+        break;
+      }
+      
+      if (finalEnemyAlive.isEmpty) {
+        playerWon = true;
+        turns.add(turn);
+        break;
+      }
+
+      // Switch turns for next round
+      isPlayerTurn = !isPlayerTurn;
       turns.add(turn);
     }
 
@@ -160,37 +229,201 @@ class BattleService {
     return damage.clamp(1, damage);
   }
 
-  /// Generate a random enemy team with progressive difficulty
+  /// Generate a predetermined enemy team with progressive difficulty
   static List<BattlePet> generateEnemyTeam(int currentRound) {
-    final allPets = PetData.getAllPets();
-    final enemyPets = <BattlePet>[];
-    
     // Check if this is a boss round (every 10th round)
     if (currentRound % 10 == 0) {
       return _generateBossTeam(currentRound);
     }
     
-    // Calculate team size: 3 base + 1 every 5 rounds
-    int teamSize = 3 + (currentRound ~/ 5);
-    teamSize = teamSize.clamp(3, 8); // Cap at 8 enemies
+    // Use predetermined teams for rounds 1-15
+    if (currentRound <= 15) {
+      return _getPredeterminedEnemyTeam(currentRound);
+    }
+    
+    // For rounds 16+, fall back to random generation
+    return _generateRandomEnemyTeam(currentRound);
+  }
+
+  /// Get predetermined enemy team for rounds 1-15
+  static List<BattlePet> _getPredeterminedEnemyTeam(int currentRound) {
+    final allPets = PetData.getAllPets();
+    final enemyPets = <BattlePet>[];
+    
+    // Define predetermined enemy compositions for each round
+    final enemyCompositions = _getEnemyCompositions();
+    final composition = enemyCompositions[currentRound] ?? enemyCompositions[15]!;
+    
+    for (int i = 0; i < composition.length; i++) {
+      final enemyData = composition[i];
+      final pet = allPets.firstWhere(
+        (p) => p.id == enemyData['petId'],
+        orElse: () => allPets.first,
+      );
+      
+      // Apply scaling based on current round
+      final scaledAttack = _scaleStat(pet.baseAttack, currentRound, 'attack');
+      final scaledHealth = _scaleStat(pet.baseHealth, currentRound, 'health');
+      
+      // Create battle pet with scaled stats
+      final battlePet = BattlePet(
+        pet: pet,
+        currentHealth: scaledHealth,
+        currentAttack: scaledAttack,
+        position: i,
+        activeEffects: [],
+        isAlive: true,
+      );
+      
+      enemyPets.add(battlePet);
+    }
+    
+    return enemyPets;
+  }
+
+  /// Define predetermined enemy compositions for rounds 1-15
+  static Map<int, List<Map<String, dynamic>>> _getEnemyCompositions() {
+    return {
+      1: [
+        {'petId': 'tanuki_starter_001'},
+        {'petId': 'kitsune_starter_001'},
+        {'petId': 'tengu_starter_001'},
+      ],
+      2: [
+        {'petId': 'tanuki_starter_001'},
+        {'petId': 'kitsune_starter_001'},
+        {'petId': 'tengu_starter_001'},
+        {'petId': 'oni_common_001'},
+      ],
+      3: [
+        {'petId': 'tanuki_starter_001'},
+        {'petId': 'kitsune_starter_001'},
+        {'petId': 'tengu_starter_001'},
+        {'petId': 'oni_common_001'},
+        {'petId': 'kitsune_common_001'},
+      ],
+      4: [
+        {'petId': 'kitsune_common_001'},
+        {'petId': 'oni_common_001'},
+        {'petId': 'tanuki_common_001'},
+        {'petId': 'tengu_common_001'},
+      ],
+      5: [
+        {'petId': 'kitsune_common_001'},
+        {'petId': 'oni_common_001'},
+        {'petId': 'tanuki_common_001'},
+        {'petId': 'tengu_common_001'},
+        {'petId': 'susanoo_common_001'},
+      ],
+      6: [
+        {'petId': 'kitsune_rare_001'},
+        {'petId': 'oni_common_001'},
+        {'petId': 'tanuki_common_001'},
+        {'petId': 'tengu_common_001'},
+        {'petId': 'susanoo_common_001'},
+      ],
+      7: [
+        {'petId': 'kitsune_rare_001'},
+        {'petId': 'oni_rare_001'},
+        {'petId': 'tanuki_common_001'},
+        {'petId': 'tengu_common_001'},
+        {'petId': 'susanoo_common_001'},
+        {'petId': 'kitsune_common_001'},
+      ],
+      8: [
+        {'petId': 'kitsune_rare_001'},
+        {'petId': 'oni_rare_001'},
+        {'petId': 'tanuki_rare_001'},
+        {'petId': 'tengu_common_001'},
+        {'petId': 'susanoo_common_001'},
+        {'petId': 'kitsune_common_001'},
+      ],
+      9: [
+        {'petId': 'kitsune_rare_001'},
+        {'petId': 'oni_rare_001'},
+        {'petId': 'tanuki_rare_001'},
+        {'petId': 'tengu_rare_001'},
+        {'petId': 'susanoo_common_001'},
+        {'petId': 'kitsune_common_001'},
+        {'petId': 'oni_common_001'},
+      ],
+      11: [
+        {'petId': 'kitsune_epic_001'},
+        {'petId': 'oni_rare_001'},
+        {'petId': 'tanuki_rare_001'},
+        {'petId': 'tengu_rare_001'},
+        {'petId': 'susanoo_rare_001'},
+        {'petId': 'kitsune_common_001'},
+        {'petId': 'oni_common_001'},
+      ],
+      12: [
+        {'petId': 'kitsune_epic_001'},
+        {'petId': 'oni_epic_001'},
+        {'petId': 'tanuki_rare_001'},
+        {'petId': 'tengu_rare_001'},
+        {'petId': 'susanoo_rare_001'},
+        {'petId': 'kitsune_common_001'},
+        {'petId': 'oni_common_001'},
+        {'petId': 'tanuki_common_001'},
+      ],
+      13: [
+        {'petId': 'kitsune_epic_001'},
+        {'petId': 'oni_epic_001'},
+        {'petId': 'tanuki_epic_001'},
+        {'petId': 'tengu_rare_001'},
+        {'petId': 'susanoo_rare_001'},
+        {'petId': 'kitsune_common_001'},
+        {'petId': 'oni_common_001'},
+        {'petId': 'tanuki_common_001'},
+      ],
+      14: [
+        {'petId': 'kitsune_epic_001'},
+        {'petId': 'oni_epic_001'},
+        {'petId': 'tanuki_epic_001'},
+        {'petId': 'tengu_epic_001'},
+        {'petId': 'susanoo_rare_001'},
+        {'petId': 'kitsune_common_001'},
+        {'petId': 'oni_common_001'},
+        {'petId': 'tanuki_common_001'},
+        {'petId': 'tengu_common_001'},
+      ],
+      15: [
+        {'petId': 'kitsune_epic_001'},
+        {'petId': 'oni_epic_001'},
+        {'petId': 'tanuki_epic_001'},
+        {'petId': 'tengu_epic_001'},
+        {'petId': 'susanoo_epic_001'},
+        {'petId': 'kitsune_common_001'},
+        {'petId': 'oni_common_001'},
+        {'petId': 'tanuki_common_001'},
+        {'petId': 'tengu_common_001'},
+        {'petId': 'susanoo_common_001'},
+      ],
+    };
+  }
+
+  /// Generate random enemy team for rounds 16+
+  static List<BattlePet> _generateRandomEnemyTeam(int currentRound) {
+    final allPets = PetData.getAllPets();
+    final enemyPets = <BattlePet>[];
+    
+    // Calculate team size: 3 base + 1 every 3 rounds, with faster scaling
+    int teamSize = 3 + (currentRound ~/ 3); // More frequent enemy additions
+    teamSize = teamSize.clamp(3, 10); // Cap at 10 enemies for more challenge
     
     for (int i = 0; i < teamSize; i++) {
-      // Higher rounds = better pets
+      // Higher rounds = better pets with more aggressive scaling
       PetRarity rarity;
-      if (currentRound < 3) {
-        rarity = PetRarity.common;
-      } else if (currentRound < 6) {
-        rarity = _random.nextBool() ? PetRarity.common : PetRarity.rare;
-      } else if (currentRound < 10) {
+      if (currentRound < 20) {
         final rand = _random.nextDouble();
-        if (rand < 0.4) rarity = PetRarity.common;
-        else if (rand < 0.8) rarity = PetRarity.rare;
-        else rarity = PetRarity.epic;
+        if (rand < 0.1) rarity = PetRarity.rare;
+        else if (rand < 0.6) rarity = PetRarity.epic;
+        else rarity = PetRarity.legendary;
       } else {
+        // Very high rounds: mostly epic and legendary
         final rand = _random.nextDouble();
-        if (rand < 0.2) rarity = PetRarity.common;
-        else if (rand < 0.5) rarity = PetRarity.rare;
-        else if (rand < 0.8) rarity = PetRarity.epic;
+        if (rand < 0.1) rarity = PetRarity.rare;
+        else if (rand < 0.6) rarity = PetRarity.epic;
         else rarity = PetRarity.legendary;
       }
       
@@ -239,17 +472,27 @@ class BattleService {
 
   /// Scale stats based on current round
   static int _scaleStat(int baseStat, int currentRound, String statType, {bool isBoss = false}) {
-    // Each round increases stats by 1 point
+    // Base scaling: each round increases stats
     int scaling = currentRound - 1;
     
-    // Boss rounds get additional scaling
+    // Additional scaling for higher rounds
+    if (currentRound > 5) {
+      scaling += (currentRound - 5) * 2; // Extra scaling after round 5
+    }
+    
+    if (currentRound > 10) {
+      scaling += (currentRound - 10) * 3; // Even more scaling after round 10
+    }
+    
+    // Boss rounds get significant additional scaling
     if (isBoss) {
-      scaling += (currentRound ~/ 10) * 3; // Extra scaling for boss rounds
+      scaling += (currentRound ~/ 10) * 5; // Extra scaling for boss rounds
     }
     
     // Apply scaling to the stat
     if (statType == 'health') {
-      return baseStat + scaling;
+      // Health gets more scaling than attack for tankiness
+      return baseStat + (scaling * 1.5).round();
     } else if (statType == 'attack') {
       return baseStat + scaling;
     }

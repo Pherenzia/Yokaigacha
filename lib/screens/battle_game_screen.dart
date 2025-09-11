@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/theme/app_theme.dart';
@@ -29,6 +30,10 @@ class _BattleGameScreenState extends State<BattleGameScreen>
   BattleResult? _battleResultData;
   List<String> _battleLog = [];
   bool _isBattleAnimating = false;
+  
+  // Store original scaled health values for retries
+  Map<String, int> _originalEnemyHealth = {};
+  Map<String, int> _originalPlayerHealth = {};
   
   late AnimationController _attackController;
   late AnimationController _damageController;
@@ -93,11 +98,64 @@ class _BattleGameScreenState extends State<BattleGameScreen>
       isAlive: true,
     )).toList();
     
+    // Store original player health values
+    _originalPlayerHealth.clear();
+    for (final pet in _playerTeam!) {
+      _originalPlayerHealth[pet.pet.id] = pet.currentHealth;
+    }
+    
     // Get current round from user progress
     final gameProvider = Provider.of<GameProvider>(context, listen: false);
     final currentRound = gameProvider.userProgress?.currentRound ?? 1;
     
     _enemyTeam = BattleService.generateEnemyTeam(currentRound);
+    
+    // Store original enemy health values (scaled)
+    _originalEnemyHealth.clear();
+    for (final pet in _enemyTeam!) {
+      _originalEnemyHealth[pet.pet.id] = pet.currentHealth;
+      if (kDebugMode) {
+        print('Storing original enemy health: ${pet.pet.name} (${pet.pet.id}) = ${pet.currentHealth}');
+      }
+    }
+    
+    // Check if this is a boss round
+    final isBossRound = currentRound % 10 == 0;
+    if (isBossRound) {
+      _battleLog.add('🔥 BOSS BATTLE - Round $currentRound! 🔥');
+      _battleLog.add('A powerful boss Yokai has appeared!');
+    } else {
+      _battleLog.add('Round $currentRound - Battle started with ${_playerTeam!.length} pets!');
+    }
+  }
+
+  void _initializeBattleForRetry() {
+    // Reset player team health to original values
+    if (_playerTeam != null) {
+      for (final pet in _playerTeam!) {
+        pet.currentHealth = _originalPlayerHealth[pet.pet.id] ?? pet.pet.currentHealth;
+        pet.isAlive = true;
+        pet.activeEffects.clear();
+      }
+    }
+    
+    // Reset enemy team health to original scaled values
+    if (_enemyTeam != null) {
+      for (final pet in _enemyTeam!) {
+        // Reset to the original scaled health that was generated
+        final originalHealth = _originalEnemyHealth[pet.pet.id] ?? pet.currentHealth;
+        pet.currentHealth = originalHealth;
+        pet.isAlive = true;
+        pet.activeEffects.clear();
+        if (kDebugMode) {
+          print('Retry: Restoring enemy health: ${pet.pet.name} (${pet.pet.id}) = $originalHealth');
+        }
+      }
+    }
+    
+    // Get current round from user progress
+    final gameProvider = Provider.of<GameProvider>(context, listen: false);
+    final currentRound = gameProvider.userProgress?.currentRound ?? 1;
     
     // Check if this is a boss round
     final isBossRound = currentRound % 10 == 0;
@@ -821,7 +879,7 @@ class _BattleGameScreenState extends State<BattleGameScreen>
       _battleLog.clear();
       _isBattleAnimating = false;
     });
-    _initializeBattle();
+    _initializeBattleForRetry();
   }
 
   void _startNextRound() async {
@@ -890,7 +948,7 @@ class _BattleGameScreenState extends State<BattleGameScreen>
       ),
     );
     
-    // Reset battle state and start fresh (same as _startNewBattle)
+    // Reset battle state and start fresh
     setState(() {
       _currentTurn = 0;
       _isPlayerTurn = true;
@@ -903,7 +961,7 @@ class _BattleGameScreenState extends State<BattleGameScreen>
       _isBattleAnimating = false;
     });
     
-    // Initialize battle with round 1 difficulty
+    // Initialize battle with round 1 difficulty (this will regenerate teams with proper scaling)
     _initializeBattle();
   }
 
@@ -960,20 +1018,62 @@ class _BattleGameScreenState extends State<BattleGameScreen>
     final battleLog = battleResult.battleLog;
     if (battleLog != null && battleLog['playerTeam'] != null) {
       final playerTeamData = battleLog['playerTeam'] as List<dynamic>;
-      for (int i = 0; i < playerTeamData.length && i < _playerTeam!.length; i++) {
-        final petData = playerTeamData[i] as Map<String, dynamic>;
-        _playerTeam![i].currentHealth = petData['currentHealth'] as int;
-        _playerTeam![i].isAlive = _playerTeam![i].currentHealth > 0;
+      
+      // Create a map of pet ID to health data for efficient lookup
+      final playerHealthMap = <String, Map<String, dynamic>>{};
+      for (final petData in playerTeamData) {
+        final petJson = petData as Map<String, dynamic>;
+        // The 'pet' field is now a Map (from toJson()), so we can access id directly
+        final petMap = petJson['pet'] as Map<String, dynamic>;
+        final petId = petMap['id'] as String;
+        playerHealthMap[petId] = petJson;
+      }
+      
+      // Update player team health by matching pet IDs
+      for (final playerPet in _playerTeam!) {
+        final petId = playerPet.pet.id;
+        if (playerHealthMap.containsKey(petId)) {
+          final petData = playerHealthMap[petId]!;
+          final newHealth = petData['currentHealth'] as int;
+          playerPet.currentHealth = newHealth;
+          playerPet.isAlive = newHealth > 0;
+          
+          // Debug logging
+          if (kDebugMode) {
+            print('Player ${playerPet.pet.name} (${petId}): Health = $newHealth, Alive = ${playerPet.isAlive}');
+          }
+        }
       }
     }
     
     // Update enemy team health based on battle result
     if (battleLog != null && battleLog['enemyTeam'] != null) {
       final enemyTeamData = battleLog['enemyTeam'] as List<dynamic>;
-      for (int i = 0; i < enemyTeamData.length && i < _enemyTeam!.length; i++) {
-        final petData = enemyTeamData[i] as Map<String, dynamic>;
-        _enemyTeam![i].currentHealth = petData['currentHealth'] as int;
-        _enemyTeam![i].isAlive = _enemyTeam![i].currentHealth > 0;
+      
+      // Create a map of pet ID to health data for efficient lookup
+      final enemyHealthMap = <String, Map<String, dynamic>>{};
+      for (final petData in enemyTeamData) {
+        final petJson = petData as Map<String, dynamic>;
+        // The 'pet' field is now a Map (from toJson()), so we can access id directly
+        final petMap = petJson['pet'] as Map<String, dynamic>;
+        final petId = petMap['id'] as String;
+        enemyHealthMap[petId] = petJson;
+      }
+      
+      // Update enemy team health by matching pet IDs
+      for (final enemyPet in _enemyTeam!) {
+        final petId = enemyPet.pet.id;
+        if (enemyHealthMap.containsKey(petId)) {
+          final petData = enemyHealthMap[petId]!;
+          final newHealth = petData['currentHealth'] as int;
+          enemyPet.currentHealth = newHealth;
+          enemyPet.isAlive = newHealth > 0;
+          
+          // Debug logging
+          if (kDebugMode) {
+            print('Enemy ${enemyPet.pet.name} (${petId}): Health = $newHealth, Alive = ${enemyPet.isAlive}');
+          }
+        }
       }
     }
   }
@@ -997,14 +1097,15 @@ class _BattleGameScreenState extends State<BattleGameScreen>
           final attackData = attack as Map<String, dynamic>;
           final attacker = attackData['attacker'] as String;
           final target = attackData['target'] as String;
+          final targetId = attackData['targetId'] as String;
           final damage = attackData['damage'] as int;
           final targetHealth = attackData['targetHealth'] as int;
           
           _battleLog.add('$attacker attacks $target for $damage damage!');
           
-          // Update enemy pet health in real-time
+          // Update enemy pet health in real-time using unique ID
           final enemyPet = _enemyTeam!.firstWhere(
-            (pet) => pet.pet.name == target,
+            (pet) => pet.pet.id == targetId,
             orElse: () => _enemyTeam!.first,
           );
           enemyPet.currentHealth = targetHealth;
@@ -1027,14 +1128,15 @@ class _BattleGameScreenState extends State<BattleGameScreen>
           final attackData = attack as Map<String, dynamic>;
           final attacker = attackData['attacker'] as String;
           final target = attackData['target'] as String;
+          final targetId = attackData['targetId'] as String;
           final damage = attackData['damage'] as int;
           final targetHealth = attackData['targetHealth'] as int;
           
           _battleLog.add('$attacker attacks $target for $damage damage!');
           
-          // Update player pet health in real-time
+          // Update player pet health in real-time using unique ID
           final playerPet = _playerTeam!.firstWhere(
-            (pet) => pet.pet.name == target,
+            (pet) => pet.pet.id == targetId,
             orElse: () => _playerTeam!.first,
           );
           playerPet.currentHealth = targetHealth;

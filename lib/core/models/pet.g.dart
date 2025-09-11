@@ -89,7 +89,7 @@ BattlePet _$BattlePetFromJson(Map<String, dynamic> json) => BattlePet(
     );
 
 Map<String, dynamic> _$BattlePetToJson(BattlePet instance) => <String, dynamic>{
-      'pet': instance.pet,
+      'pet': instance.pet.toJson(),
       'currentHealth': instance.currentHealth,
       'currentAttack': instance.currentAttack,
       'position': instance.position,
