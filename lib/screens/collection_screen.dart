@@ -6,6 +6,19 @@ import '../core/models/pet.dart';
 import '../core/services/storage_service.dart';
 import '../widgets/currency_display.dart';
 
+// Helper class to group pets by their unique characteristics
+class PetCollectionItem {
+  final Pet pet;
+  final int quantity;
+  final String uniqueKey; // Combination of name + rarity + variant
+
+  PetCollectionItem({
+    required this.pet,
+    required this.quantity,
+    required this.uniqueKey,
+  });
+}
+
 class CollectionScreen extends StatefulWidget {
   const CollectionScreen({super.key});
 
@@ -15,6 +28,7 @@ class CollectionScreen extends StatefulWidget {
 
 class _CollectionScreenState extends State<CollectionScreen> {
   List<Pet> _userPets = [];
+  List<PetCollectionItem> _collectionItems = [];
   bool _isLoading = true;
 
   @override
@@ -37,8 +51,54 @@ class _CollectionScreenState extends State<CollectionScreen> {
     
     try {
       final pets = StorageService.getAllPets();
+      
+      // Group pets by their unique characteristics
+      final Map<String, List<Pet>> groupedPets = {};
+      
+      for (final pet in pets) {
+        // Create a unique key based on name, rarity, and variant
+        final uniqueKey = '${pet.name}_${pet.rarity.name}_${pet.variantId}';
+        
+        if (!groupedPets.containsKey(uniqueKey)) {
+          groupedPets[uniqueKey] = [];
+        }
+        groupedPets[uniqueKey]!.add(pet);
+      }
+      
+      // Create collection items with quantities
+      final collectionItems = <PetCollectionItem>[];
+      groupedPets.forEach((uniqueKey, petList) {
+        // Use the first pet as the representative (they should all be the same)
+        final representativePet = petList.first;
+        collectionItems.add(PetCollectionItem(
+          pet: representativePet,
+          quantity: petList.length,
+          uniqueKey: uniqueKey,
+        ));
+      });
+      
+      // Sort by rarity (legendary first) then by name
+      collectionItems.sort((a, b) {
+        final rarityOrder = {
+          PetRarity.legendary: 0,
+          PetRarity.epic: 1,
+          PetRarity.rare: 2,
+          PetRarity.common: 3,
+        };
+        
+        final aRarityOrder = rarityOrder[a.pet.rarity] ?? 4;
+        final bRarityOrder = rarityOrder[b.pet.rarity] ?? 4;
+        
+        if (aRarityOrder != bRarityOrder) {
+          return aRarityOrder.compareTo(bRarityOrder);
+        }
+        
+        return a.pet.name.compareTo(b.pet.name);
+      });
+      
       setState(() {
         _userPets = pets;
+        _collectionItems = collectionItems;
         _isLoading = false;
       });
     } catch (e) {
@@ -71,14 +131,15 @@ class _CollectionScreenState extends State<CollectionScreen> {
   }
 
   Widget _buildCollectionContent() {
-    final unlockedPets = _userPets.where((pet) => pet.isUnlocked).length;
-    final totalPets = _userPets.length;
+    final unlockedItems = _collectionItems.where((item) => item.pet.isUnlocked).length;
+    final totalItems = _collectionItems.length;
+    final totalPetCount = _userPets.length; // Total individual pets
 
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          _buildCollectionStats(unlockedPets, totalPets),
+          _buildCollectionStats(unlockedItems, totalItems, totalPetCount),
           const SizedBox(height: 16),
           Expanded(
             child: _buildPetGrid(),
@@ -88,7 +149,7 @@ class _CollectionScreenState extends State<CollectionScreen> {
     );
   }
 
-  Widget _buildCollectionStats(int unlockedPets, int totalPets) {
+  Widget _buildCollectionStats(int unlockedItems, int totalItems, int totalPetCount) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -96,20 +157,20 @@ class _CollectionScreenState extends State<CollectionScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             _buildStatItem(
-              'Unlocked',
-              unlockedPets.toString(),
+              'Unique',
+              unlockedItems.toString(),
               Icons.pets,
               AppTheme.primaryColor,
             ),
             _buildStatItem(
-              'Total',
-              totalPets.toString(),
+              'Total Pets',
+              totalPetCount.toString(),
               Icons.collections,
               AppTheme.secondaryColor,
             ),
             _buildStatItem(
               'Completion',
-              totalPets > 0 ? '${(unlockedPets / totalPets * 100).round()}%' : '0%',
+              totalItems > 0 ? '${(unlockedItems / totalItems * 100).round()}%' : '0%',
               Icons.percent,
               AppTheme.successColor,
             ),
@@ -151,14 +212,16 @@ class _CollectionScreenState extends State<CollectionScreen> {
         mainAxisSpacing: 12,
         childAspectRatio: 0.65, // Slightly taller for better text readability
       ),
-      itemCount: _userPets.length,
+      itemCount: _collectionItems.length,
       itemBuilder: (context, index) {
-        return _buildPetCard(_userPets[index]);
+        return _buildPetCard(_collectionItems[index]);
       },
     );
   }
 
-  Widget _buildPetCard(Pet pet) {
+  Widget _buildPetCard(PetCollectionItem collectionItem) {
+    final pet = collectionItem.pet;
+    final quantity = collectionItem.quantity;
     final isUnlocked = pet.isUnlocked;
     final rarityColor = _getRarityColor(pet.rarity);
 
@@ -174,8 +237,10 @@ class _CollectionScreenState extends State<CollectionScreen> {
             width: 1,
           ),
         ),
-        child: Column(
+        child: Stack(
           children: [
+            Column(
+              children: [
             // Name and Rarity Section
             Expanded(
               flex: 2,
@@ -336,6 +401,36 @@ class _CollectionScreenState extends State<CollectionScreen> {
                       ),
               ),
             ),
+              ],
+            ),
+            // Quantity Badge - only show if quantity > 1
+            if (quantity > 1)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 2,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    'x$quantity',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
