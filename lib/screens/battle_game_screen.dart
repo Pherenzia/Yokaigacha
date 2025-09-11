@@ -410,13 +410,36 @@ class _BattleGameScreenState extends State<BattleGameScreen>
             ),
           ),
           const SizedBox(height: 8),
-          // Pet Name
-          Text(
-            pet.name,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
+          // Pet Name with Star Level
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                pet.name,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              if (pet.starLevel > 0) ...[
+                const SizedBox(width: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: _getStarColor(pet.starLevel),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '★${pet.starLevel}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 8,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
           const SizedBox(height: 4),
           // Health Bar
@@ -451,7 +474,7 @@ class _BattleGameScreenState extends State<BattleGameScreen>
             ),
           ),
           Text(
-            '${battlePet.currentAttack} ATK',
+            '${pet.baseAttack} ATK',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               fontSize: 10,
               color: AppTheme.accentColor,
@@ -921,6 +944,23 @@ class _BattleGameScreenState extends State<BattleGameScreen>
         return AppTheme.petRarityEpic;
       case PetRarity.legendary:
         return AppTheme.petRarityLegendary;
+    }
+  }
+
+  Color _getStarColor(int starLevel) {
+    switch (starLevel) {
+      case 1:
+        return const Color(0xFF4CAF50); // Green
+      case 2:
+        return const Color(0xFF2196F3); // Blue
+      case 3:
+        return const Color(0xFF9C27B0); // Purple
+      case 4:
+        return const Color(0xFFFF9800); // Orange
+      case 5:
+        return const Color(0xFFF44336); // Red
+      default:
+        return const Color(0xFF9E9E9E); // Grey
     }
   }
 

@@ -112,7 +112,7 @@ class _CollectionScreenState extends State<CollectionScreen> {
             uniqueKey: uniqueKey,
             canStarUp: canStarUp,
             availableCopiesForStarUp: availableCopies,
-            materialCount: 0,
+            materialCount: materialPets.length, // All 0-star pets are materials
           ));
         }
       });
@@ -515,7 +515,7 @@ class _CollectionScreenState extends State<CollectionScreen> {
                               ),
                               const SizedBox(width: 3),
                               Text(
-                                '${pet.baseAttack}',
+                                '${pet.currentAttack}',
                                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                   color: AppTheme.accentColor,
                                   fontWeight: FontWeight.w600,
@@ -535,7 +535,7 @@ class _CollectionScreenState extends State<CollectionScreen> {
                               ),
                               const SizedBox(width: 3),
                               Text(
-                                '${pet.baseHealth}',
+                                '${pet.currentHealth}',
                                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                   color: AppTheme.successColor,
                                   fontWeight: FontWeight.w600,
@@ -615,7 +615,7 @@ class _CollectionScreenState extends State<CollectionScreen> {
                   ),
                 ),
               ),
-            // Material Count Badge - show if there are 0-star pets available as materials
+            // Starring Progress Badge - show available copies vs required copies
             if (collectionItem.materialCount > 0)
               Positioned(
                 bottom: 8,
@@ -634,7 +634,7 @@ class _CollectionScreenState extends State<CollectionScreen> {
                     ],
                   ),
                   child: Text(
-                    '${collectionItem.materialCount}★',
+                    '${collectionItem.materialCount}/${StarService.getCopiesRequiredForNextStar(pet.starLevel)}',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 10,

@@ -311,7 +311,7 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
               overflow: TextOverflow.ellipsis,
             ),
             Text(
-              '${pet.baseAttack}/${pet.baseHealth}',
+              '${pet.currentAttack}/${pet.currentHealth}',
               style: const TextStyle(fontSize: 8),
             ),
             Row(
@@ -577,7 +577,7 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              '${pet.baseAttack}',
+                              '${pet.currentAttack}',
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                 color: AppTheme.accentColor,
                                 fontWeight: FontWeight.w600,
@@ -597,7 +597,7 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              '${pet.baseHealth}',
+                              '${pet.currentHealth}',
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                 color: AppTheme.successColor,
                                 fontWeight: FontWeight.w600,
@@ -673,6 +673,7 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
         variantId: pet.variantId,
         isUnlocked: pet.isUnlocked,
         unlockDate: pet.unlockDate,
+        starLevel: pet.starLevel, // Include the star level!
       );
       _selectedPets.add(uniquePet);
     });

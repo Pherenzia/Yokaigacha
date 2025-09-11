@@ -57,9 +57,10 @@ class StarService {
     final uniqueKey = '${pet.name}_${pet.rarity.name}_${pet.variantId}';
     final petGroup = groupedPets[uniqueKey] ?? [];
     
-    // Need at least the required number of copies (including the main pet)
+    // Only count 0-star pets as materials (exclude starred pets)
+    final materialPets = petGroup.where((p) => p.starLevel == 0).toList();
     final requiredCopies = getCopiesRequiredForNextStar(pet.starLevel);
-    return petGroup.length >= requiredCopies;
+    return materialPets.length >= requiredCopies;
   }
 
   /// Get the number of available copies for starring up
@@ -68,8 +69,9 @@ class StarService {
     final uniqueKey = '${pet.name}_${pet.rarity.name}_${pet.variantId}';
     final petGroup = groupedPets[uniqueKey] ?? [];
     
-    // Return total copies available for starring up
-    return petGroup.length;
+    // Only count 0-star pets as materials (exclude starred pets)
+    final materialPets = petGroup.where((p) => p.starLevel == 0).toList();
+    return materialPets.length;
   }
 
   /// Star up a pet by consuming the required copies
@@ -82,12 +84,11 @@ class StarService {
     
     final requiredCopies = getCopiesRequiredForNextStar(pet.starLevel);
     
-    // Sort pets by star level (lowest first) and unlock date (oldest first) for consumption
-    final sortedPets = List<Pet>.from(petGroup);
-    sortedPets.sort((a, b) {
-      if (a.starLevel != b.starLevel) {
-        return a.starLevel.compareTo(b.starLevel);
-      }
+    // Only use 0-star pets as materials (exclude starred pets)
+    final materialPets = petGroup.where((p) => p.starLevel == 0).toList();
+    
+    // Sort material pets by unlock date (oldest first) for consumption
+    materialPets.sort((a, b) {
       if (a.unlockDate != null && b.unlockDate != null) {
         return a.unlockDate!.compareTo(b.unlockDate!);
       }
@@ -98,14 +99,16 @@ class StarService {
     final mainPet = getHighestStarPet(petGroup);
     if (mainPet == null) return false;
     
-    // Remove the required number of copies (including the main pet)
+    // Remove the required number of material copies
     final petsToRemove = <Pet>[];
     int copiesToRemove = requiredCopies;
     
-    for (final p in sortedPets) {
+    for (final p in materialPets) {
       if (copiesToRemove > 0) {
         petsToRemove.add(p);
         copiesToRemove--;
+      } else {
+        break; // Stop once we have enough copies
       }
     }
     
