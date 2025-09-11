@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../core/theme/app_theme.dart';
 import '../core/models/pet.dart';
 import '../core/services/storage_service.dart';
+import '../core/services/star_service.dart';
 import '../core/providers/user_progress_provider.dart';
 import '../widgets/currency_display.dart';
 import 'battle_game_screen.dart';
@@ -35,7 +36,9 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
     try {
       // Get all unlocked pets from collection
       final allPets = StorageService.getAllPets();
-      final unlockedPets = allPets.where((pet) => pet.isUnlocked).toList();
+      // Filter out removed pets (those with '_removed' in their ID)
+      final activePets = allPets.where((pet) => !pet.id.contains('_removed')).toList();
+      final unlockedPets = activePets.where((pet) => pet.isUnlocked).toList();
       
       // Store all available pets
       _availablePets = unlockedPets;
@@ -450,20 +453,43 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: rarityColor,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        pet.rarity.name.toUpperCase(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (pet.starLevel > 0) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: _getStarColor(pet.starLevel),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              StarService.getStarDisplay(pet.starLevel),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 8,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                        ],
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: rarityColor,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            pet.rarity.name.toUpperCase(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ],
                 ),
@@ -713,6 +739,25 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
         return Icons.bug_report; // Not used in Yokai theme
       case PetType.mythical:
         return Icons.auto_awesome; // All other Yokai
+    }
+  }
+
+  Color _getStarColor(int starLevel) {
+    switch (starLevel) {
+      case 0:
+        return Colors.grey;
+      case 1:
+        return Colors.green;
+      case 2:
+        return Colors.blue;
+      case 3:
+        return Colors.purple;
+      case 4:
+        return Colors.orange;
+      case 5:
+        return Colors.red;
+      default:
+        return Colors.grey;
     }
   }
 }

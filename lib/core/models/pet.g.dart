@@ -42,6 +42,7 @@ Pet _$PetFromJson(Map<String, dynamic> json) => Pet(
       unlockDate: json['unlockDate'] == null
           ? null
           : DateTime.parse(json['unlockDate'] as String),
+      starLevel: json['starLevel'] as int? ?? 0,
     );
 
 Map<String, dynamic> _$PetToJson(Pet instance) => <String, dynamic>{
@@ -54,11 +55,12 @@ Map<String, dynamic> _$PetToJson(Pet instance) => <String, dynamic>{
       'baseHealth': instance.baseHealth,
       'level': instance.level,
       'experience': instance.experience,
-      'abilities': instance.abilities,
+      'abilities': instance.abilities.map((e) => e.toJson()).toList(),
       'imagePath': instance.imagePath,
       'variantId': instance.variantId,
       'isUnlocked': instance.isUnlocked,
       'unlockDate': instance.unlockDate?.toIso8601String(),
+      'starLevel': instance.starLevel,
     };
 
 const _$PetRarityEnumMap = {
@@ -88,7 +90,8 @@ BattlePet _$BattlePetFromJson(Map<String, dynamic> json) => BattlePet(
       isAlive: json['isAlive'] as bool,
     );
 
-Map<String, dynamic> _$BattlePetToJson(BattlePet instance) => <String, dynamic>{
+Map<String, dynamic> _$BattlePetToJson(BattlePet instance) =>
+    <String, dynamic>{
       'pet': instance.pet.toJson(),
       'currentHealth': instance.currentHealth,
       'currentAttack': instance.currentAttack,
@@ -96,4 +99,3 @@ Map<String, dynamic> _$BattlePetToJson(BattlePet instance) => <String, dynamic>{
       'activeEffects': instance.activeEffects,
       'isAlive': instance.isAlive,
     };
-

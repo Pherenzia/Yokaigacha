@@ -2,14 +2,6 @@
 
 part of 'game_data.dart';
 
-// Import the enum map from pet.g.dart
-const _$PetRarityEnumMap = {
-  PetRarity.common: 'common',
-  PetRarity.rare: 'rare',
-  PetRarity.epic: 'epic',
-  PetRarity.legendary: 'legendary',
-};
-
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
@@ -35,8 +27,8 @@ UserProgress _$UserProgressFromJson(Map<String, dynamic> json) => UserProgress(
       achievements: (json['achievements'] as List<dynamic>)
           .map((e) => e as String)
           .toList(),
-      currentRound: json['currentRound'] as int? ?? 1,
-      spirit: json['spirit'] as int? ?? 12,
+      currentRound: json['currentRound'] as int,
+      spirit: json['spirit'] as int,
     );
 
 Map<String, dynamic> _$UserProgressToJson(UserProgress instance) =>
@@ -69,7 +61,7 @@ BattleTeam _$BattleTeamFromJson(Map<String, dynamic> json) => BattleTeam(
 
 Map<String, dynamic> _$BattleTeamToJson(BattleTeam instance) =>
     <String, dynamic>{
-      'pets': instance.pets,
+      'pets': instance.pets.map((e) => e.toJson()).toList(),
       'teamName': instance.teamName,
       'createdAt': instance.createdAt.toIso8601String(),
     };
@@ -111,7 +103,7 @@ GachaResult _$GachaResultFromJson(Map<String, dynamic> json) => GachaResult(
 Map<String, dynamic> _$GachaResultToJson(GachaResult instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'pet': instance.pet,
+      'pet': instance.pet.toJson(),
       'rarity': _$PetRarityEnumMap[instance.rarity]!,
       'isNewVariant': instance.isNewVariant,
       'timestamp': instance.timestamp.toIso8601String(),
@@ -145,3 +137,9 @@ Map<String, dynamic> _$AchievementToJson(Achievement instance) =>
       'unlockDate': instance.unlockDate?.toIso8601String(),
     };
 
+const _$PetRarityEnumMap = {
+  PetRarity.common: 'common',
+  PetRarity.rare: 'rare',
+  PetRarity.epic: 'epic',
+  PetRarity.legendary: 'legendary',
+};

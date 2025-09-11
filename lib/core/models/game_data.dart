@@ -77,7 +77,7 @@ class UserProgress {
   factory UserProgress.initial(String userId) {
     return UserProgress(
       userId: userId,
-      coins: 100, // Starting coins
+      coins: 50000, // Starting coins for testing
       gems: 10, // Starting gems
       level: 1,
       experience: 0,

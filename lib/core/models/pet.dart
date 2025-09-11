@@ -4,7 +4,6 @@ import 'package:json_annotation/json_annotation.dart';
 part 'pet.g.dart';
 
 @HiveType(typeId: 0)
-@JsonSerializable()
 enum PetRarity {
   @HiveField(0)
   common,
@@ -17,7 +16,6 @@ enum PetRarity {
 }
 
 @HiveType(typeId: 1)
-@JsonSerializable()
 enum PetType {
   @HiveField(0)
   mammal,
@@ -107,6 +105,9 @@ class Pet {
   
   @HiveField(13)
   final DateTime? unlockDate;
+  
+  @HiveField(14)
+  final int starLevel; // 0-5 stars, starts at 0
 
   const Pet({
     required this.id,
@@ -123,13 +124,20 @@ class Pet {
     required this.variantId,
     required this.isUnlocked,
     this.unlockDate,
+    this.starLevel = 0,
   });
 
   // Computed properties
-  int get currentAttack => baseAttack + (level - 1) * 2;
-  int get currentHealth => baseHealth + (level - 1) * 2;
+  int get currentAttack => baseAttack + (level - 1) * 2 + (starLevel * 3);
+  int get currentHealth => baseHealth + (level - 1) * 2 + (starLevel * 5);
   int get experienceToNextLevel => level * 10;
   double get experienceProgress => experience / experienceToNextLevel;
+  
+  // Star level requirements
+  int get copiesRequiredForNextStar {
+    if (starLevel >= 5) return 0; // Max stars reached
+    return 2 * (1 << starLevel); // 2, 4, 8, 16, 32 for levels 1-5
+  }
 
   Pet copyWith({
     String? id,
@@ -146,6 +154,7 @@ class Pet {
     String? variantId,
     bool? isUnlocked,
     DateTime? unlockDate,
+    int? starLevel,
   }) {
     return Pet(
       id: id ?? this.id,
@@ -162,6 +171,7 @@ class Pet {
       variantId: variantId ?? this.variantId,
       isUnlocked: isUnlocked ?? this.isUnlocked,
       unlockDate: unlockDate ?? this.unlockDate,
+      starLevel: starLevel ?? this.starLevel,
     );
   }
 

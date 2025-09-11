@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/theme/app_theme.dart';
 import '../core/providers/user_progress_provider.dart';
 import '../core/models/pet.dart';
 import '../core/services/storage_service.dart';
+import '../core/services/star_service.dart';
 import '../widgets/currency_display.dart';
 
 // Helper class to group pets by their unique characteristics
@@ -11,11 +13,17 @@ class PetCollectionItem {
   final Pet pet;
   final int quantity;
   final String uniqueKey; // Combination of name + rarity + variant
+  final bool canStarUp;
+  final int availableCopiesForStarUp;
+  final int materialCount; // Number of 0-star pets available as materials
 
   PetCollectionItem({
     required this.pet,
     required this.quantity,
     required this.uniqueKey,
+    required this.canStarUp,
+    required this.availableCopiesForStarUp,
+    this.materialCount = 0,
   });
 }
 
@@ -52,7 +60,10 @@ class _CollectionScreenState extends State<CollectionScreen> {
     });
     
     try {
-      final pets = StorageService.getAllPets();
+      final allPets = StorageService.getAllPets();
+      
+      // Filter out removed pets (those with '_removed' in their ID)
+      final pets = allPets.where((pet) => !pet.id.contains('_removed')).toList();
       
       // Group pets by their unique characteristics
       final Map<String, List<Pet>> groupedPets = {};
@@ -61,23 +72,51 @@ class _CollectionScreenState extends State<CollectionScreen> {
         // Create a unique key based on name, rarity, and variant
         final uniqueKey = '${pet.name}_${pet.rarity.name}_${pet.variantId}';
         
+        
         if (!groupedPets.containsKey(uniqueKey)) {
           groupedPets[uniqueKey] = [];
         }
         groupedPets[uniqueKey]!.add(pet);
       }
       
-      // Create collection items with quantities
+      // Create collection items with quantities and star level info
       final collectionItems = <PetCollectionItem>[];
       groupedPets.forEach((uniqueKey, petList) {
-        // Use the first pet as the representative (they should all be the same)
-        final representativePet = petList.first;
-        collectionItems.add(PetCollectionItem(
-          pet: representativePet,
-          quantity: petList.length,
-          uniqueKey: uniqueKey,
-        ));
+        // Separate starred pets from material pets (0-star pets)
+        final starredPets = petList.where((p) => p.starLevel > 0).toList();
+        final materialPets = petList.where((p) => p.starLevel == 0).toList();
+        
+        if (starredPets.isNotEmpty) {
+          // Show the highest star pet as the main card
+          final highestStarPet = StarService.getHighestStarPet(starredPets) ?? starredPets.first;
+          final canStarUp = StarService.canStarUp(highestStarPet);
+          final availableCopies = StarService.getAvailableCopiesForStarUp(highestStarPet);
+          
+          collectionItems.add(PetCollectionItem(
+            pet: highestStarPet,
+            quantity: starredPets.length,
+            uniqueKey: uniqueKey,
+            canStarUp: canStarUp,
+            availableCopiesForStarUp: availableCopies,
+            materialCount: materialPets.length, // Show material count separately
+          ));
+        } else if (materialPets.isNotEmpty) {
+          // Show material pets as a regular card
+          final materialPet = materialPets.first;
+          final canStarUp = StarService.canStarUp(materialPet);
+          final availableCopies = StarService.getAvailableCopiesForStarUp(materialPet);
+          
+          collectionItems.add(PetCollectionItem(
+            pet: materialPet,
+            quantity: materialPets.length,
+            uniqueKey: uniqueKey,
+            canStarUp: canStarUp,
+            availableCopiesForStarUp: availableCopies,
+            materialCount: 0,
+          ));
+        }
       });
+      
       
       // Sort by rarity (legendary first) then by name
       collectionItems.sort((a, b) {
@@ -337,6 +376,8 @@ class _CollectionScreenState extends State<CollectionScreen> {
   Widget _buildPetCard(PetCollectionItem collectionItem) {
     final pet = collectionItem.pet;
     final quantity = collectionItem.quantity;
+    final canStarUp = collectionItem.canStarUp;
+    final availableCopies = collectionItem.availableCopiesForStarUp;
     final isUnlocked = pet.isUnlocked;
     final rarityColor = _getRarityColor(pet.rarity);
 
@@ -516,8 +557,36 @@ class _CollectionScreenState extends State<CollectionScreen> {
                       ),
               ),
             ),
-              ],
-            ),
+            ],
+          ),
+            // Star Level Badge
+            if (pet.starLevel > 0)
+              Positioned(
+                top: 8,
+                left: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: _getStarColor(pet.starLevel),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 2,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    StarService.getStarDisplay(pet.starLevel),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
             // Quantity Badge - only show if quantity > 1
             if (quantity > 1)
               Positioned(
@@ -542,6 +611,62 @@ class _CollectionScreenState extends State<CollectionScreen> {
                       color: Colors.white,
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            // Material Count Badge - show if there are 0-star pets available as materials
+            if (collectionItem.materialCount > 0)
+              Positioned(
+                bottom: 8,
+                left: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.orange,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 2,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    '${collectionItem.materialCount}★',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            // Star Up Button
+            if (isUnlocked && canStarUp)
+              Positioned(
+                bottom: 8,
+                right: 8,
+                child: GestureDetector(
+                  onTap: () => _showStarUpDialog(collectionItem),
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentColor,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 2,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.star,
+                      color: Colors.white,
+                      size: 16,
                     ),
                   ),
                 ),
@@ -579,6 +704,99 @@ class _CollectionScreenState extends State<CollectionScreen> {
         return Icons.bug_report; // Not used in Yokai theme
       case PetType.mythical:
         return Icons.auto_awesome; // All other Yokai
+    }
+  }
+
+  Color _getStarColor(int starLevel) {
+    switch (starLevel) {
+      case 0:
+        return Colors.grey;
+      case 1:
+        return Colors.green;
+      case 2:
+        return Colors.blue;
+      case 3:
+        return Colors.purple;
+      case 4:
+        return Colors.orange;
+      case 5:
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  void _showStarUpDialog(PetCollectionItem collectionItem) {
+    final pet = collectionItem.pet;
+    final requiredCopies = StarService.getCopiesRequiredForNextStar(pet.starLevel);
+    final availableCopies = collectionItem.availableCopiesForStarUp;
+    
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Star Up ${pet.name}'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Current Star Level: ${StarService.getStarDisplay(pet.starLevel)}'),
+              const SizedBox(height: 8),
+              Text('Required Copies: $requiredCopies'),
+              Text('Available Copies: $availableCopies'),
+              const SizedBox(height: 8),
+              Text('New Star Level: ${StarService.getStarDisplay(pet.starLevel + 1)}'),
+              const SizedBox(height: 8),
+              Text('Stat Bonuses:'),
+              Text('• Attack: +3'),
+              Text('• Health: +5'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _performStarUp(collectionItem);
+              },
+              child: const Text('Star Up'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _performStarUp(PetCollectionItem collectionItem) async {
+    try {
+      final success = await StarService.starUpPet(collectionItem.pet);
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${collectionItem.pet.name} starred up successfully!'),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+        // Reload the collection to show updated star levels
+        _loadUserPets();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to star up pet. Please try again.'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
     }
   }
 }
