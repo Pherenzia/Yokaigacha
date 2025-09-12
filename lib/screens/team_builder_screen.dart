@@ -57,14 +57,75 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
   }
 
   void _applyRarityFilter() {
+    List<Pet> petsToFilter;
+    
     if (_selectedRarity == null) {
       // Show all rarities
-      _filteredPets = List.from(_availablePets);
+      petsToFilter = List.from(_availablePets);
     } else {
       // Filter by selected rarity
-      _filteredPets = _availablePets
+      petsToFilter = _availablePets
           .where((pet) => pet.rarity == _selectedRarity)
           .toList();
+    }
+    
+    // Group pets by unique characteristics (name, rarity, variantId)
+    final Map<String, List<Pet>> petGroups = {};
+    for (final pet in petsToFilter) {
+      final uniqueKey = '${pet.name}_${pet.rarity.name}_${pet.variantId}';
+      if (!petGroups.containsKey(uniqueKey)) {
+        petGroups[uniqueKey] = [];
+      }
+      petGroups[uniqueKey]!.add(pet);
+    }
+    
+    // For each group, get the highest star level pet
+    final List<Pet> uniquePets = [];
+    for (final group in petGroups.values) {
+      // Sort by star level (highest first), then by unlock date (newest first)
+      group.sort((a, b) {
+        if (a.starLevel != b.starLevel) {
+          return b.starLevel.compareTo(a.starLevel); // Higher star level first
+        }
+        if (a.unlockDate != null && b.unlockDate != null) {
+          return b.unlockDate!.compareTo(a.unlockDate!); // Newer first
+        }
+        return 0;
+      });
+      
+      // Take the highest star level pet
+      uniquePets.add(group.first);
+    }
+    
+    // Sort the final list: starred pets first, then by rarity, then by name
+    uniquePets.sort((a, b) {
+      // First, sort by star level (starred pets at top)
+      if (a.starLevel != b.starLevel) {
+        return b.starLevel.compareTo(a.starLevel);
+      }
+      
+      // Then by rarity (legendary first, then epic, rare, common)
+      if (a.rarity != b.rarity) {
+        return _getRaritySortOrder(b.rarity).compareTo(_getRaritySortOrder(a.rarity));
+      }
+      
+      // Finally by name
+      return a.name.compareTo(b.name);
+    });
+    
+    _filteredPets = uniquePets;
+  }
+  
+  int _getRaritySortOrder(PetRarity rarity) {
+    switch (rarity) {
+      case PetRarity.legendary:
+        return 4;
+      case PetRarity.epic:
+        return 3;
+      case PetRarity.rare:
+        return 2;
+      case PetRarity.common:
+        return 1;
     }
   }
 
