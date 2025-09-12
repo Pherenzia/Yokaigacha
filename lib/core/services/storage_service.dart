@@ -3,6 +3,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/game_data.dart';
 import '../models/pet.dart';
+import '../models/cavern_run.dart';
 
 class StorageService {
   static late Box<UserProgress> _userProgressBox;
@@ -324,6 +325,76 @@ class StorageService {
       } catch (e) {
         return null;
       }
+    }
+    return null;
+  }
+
+  // Cavern Run Methods
+  static Future<void> saveCavernRun(CavernRun run) async {
+    try {
+      final runs = getAllCavernRuns();
+      runs.removeWhere((r) => r.id == run.id);
+      runs.add(run);
+      await _prefs.setString('cavern_runs', jsonEncode(runs.map((r) => r.toJson()).toList()));
+    } catch (e) {
+      print('Failed to save cavern run: $e');
+    }
+  }
+
+  static List<CavernRun> getAllCavernRuns() {
+    try {
+      final jsonString = _prefs.getString('cavern_runs');
+      if (jsonString != null) {
+        final List<dynamic> jsonList = jsonDecode(jsonString);
+        return jsonList.map((json) => CavernRun.fromJson(json)).toList();
+      }
+    } catch (e) {
+      print('Failed to load cavern runs: $e');
+    }
+    return [];
+  }
+
+  static CavernRun? getCavernRun(String id) {
+    try {
+      final runs = getAllCavernRuns();
+      return runs.where((run) => run.id == id).firstOrNull;
+    } catch (e) {
+      print('Failed to get cavern run: $e');
+    }
+    return null;
+  }
+
+  // Locked Team Methods
+  static Future<void> saveLockedTeam(LockedTeam team) async {
+    try {
+      final teams = getAllLockedTeams();
+      teams.removeWhere((t) => t.id == team.id);
+      teams.add(team);
+      await _prefs.setString('locked_teams', jsonEncode(teams.map((t) => t.toJson()).toList()));
+    } catch (e) {
+      print('Failed to save locked team: $e');
+    }
+  }
+
+  static List<LockedTeam> getAllLockedTeams() {
+    try {
+      final jsonString = _prefs.getString('locked_teams');
+      if (jsonString != null) {
+        final List<dynamic> jsonList = jsonDecode(jsonString);
+        return jsonList.map((json) => LockedTeam.fromJson(json)).toList();
+      }
+    } catch (e) {
+      print('Failed to load locked teams: $e');
+    }
+    return [];
+  }
+
+  static LockedTeam? getLockedTeam(String id) {
+    try {
+      final teams = getAllLockedTeams();
+      return teams.where((team) => team.id == id).firstOrNull;
+    } catch (e) {
+      print('Failed to get locked team: $e');
     }
     return null;
   }

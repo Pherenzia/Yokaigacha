@@ -5,6 +5,7 @@ import '../core/theme/app_theme.dart';
 import '../core/providers/game_provider.dart';
 import '../core/models/pet.dart';
 import '../core/models/game_data.dart';
+import '../core/models/cavern_run.dart';
 import '../core/services/battle_service.dart';
 import '../core/services/storage_service.dart';
 import '../core/data/pet_data.dart';
@@ -12,8 +13,19 @@ import 'home_screen.dart';
 
 class BattleGameScreen extends StatefulWidget {
   final List<Pet>? selectedPets;
+  final List<Pet>? playerTeam;
+  final List<Pet>? enemyTeam;
+  final bool isCavernMode;
+  final CavernRun? cavernRun;
   
-  const BattleGameScreen({super.key, this.selectedPets});
+  const BattleGameScreen({
+    super.key, 
+    this.selectedPets,
+    this.playerTeam,
+    this.enemyTeam,
+    this.isCavernMode = false,
+    this.cavernRun,
+  });
 
   @override
   State<BattleGameScreen> createState() => _BattleGameScreenState();
@@ -76,24 +88,47 @@ class _BattleGameScreenState extends State<BattleGameScreen>
   }
 
   void _initializeBattle() {
-    List<Pet> petsToUse;
+    List<Pet> playerPets;
+    List<Pet> enemyPets;
     
-    // Use selected pets from team builder if available, otherwise use default pets
-    if (widget.selectedPets != null && widget.selectedPets!.isNotEmpty) {
-      petsToUse = widget.selectedPets!;
+    if (widget.isCavernMode) {
+      // Cavern mode: use provided teams
+      playerPets = widget.playerTeam ?? [];
+      enemyPets = widget.enemyTeam ?? [];
     } else {
-      // Get user's unlocked pets from storage
-      final userPets = StorageService.getAllPets().where((pet) => pet.isUnlocked).toList();
+      // Normal mode: use selected pets from team builder if available, otherwise use default pets
+      if (widget.selectedPets != null && widget.selectedPets!.isNotEmpty) {
+        playerPets = widget.selectedPets!;
+      } else {
+        // Get user's unlocked pets from storage
+        final userPets = StorageService.getAllPets().where((pet) => pet.isUnlocked).toList();
+        
+        // If user has pets, use them; otherwise use starter pets
+        playerPets = userPets.isNotEmpty ? userPets : PetData.getStarterPets();
+      }
       
-      // If user has pets, use them; otherwise use starter pets
-      petsToUse = userPets.isNotEmpty ? userPets : PetData.getStarterPets();
+      // For normal mode, generate enemy team based on current round
+      final gameProvider = Provider.of<GameProvider>(context, listen: false);
+      final currentRound = gameProvider.userProgress?.currentRound ?? 1;
+      enemyPets = BattleService.generateEnemyTeam(currentRound).map((battlePet) => battlePet.pet).toList();
     }
     
-    _playerTeam = petsToUse.take(5).map((pet) => BattlePet(
+    // Create player team
+    _playerTeam = playerPets.take(5).map((pet) => BattlePet(
       pet: pet,
       currentHealth: pet.currentHealth,
       currentAttack: pet.currentAttack,
-      position: petsToUse.indexOf(pet),
+      position: playerPets.indexOf(pet),
+      activeEffects: [],
+      isAlive: true,
+    )).toList();
+    
+    // Create enemy team
+    _enemyTeam = enemyPets.take(5).map((pet) => BattlePet(
+      pet: pet,
+      currentHealth: pet.currentHealth,
+      currentAttack: pet.currentAttack,
+      position: enemyPets.indexOf(pet),
       activeEffects: [],
       isAlive: true,
     )).toList();
@@ -104,13 +139,7 @@ class _BattleGameScreenState extends State<BattleGameScreen>
       _originalPlayerHealth[pet.pet.id] = pet.currentHealth;
     }
     
-    // Get current round from user progress
-    final gameProvider = Provider.of<GameProvider>(context, listen: false);
-    final currentRound = gameProvider.userProgress?.currentRound ?? 1;
-    
-    _enemyTeam = BattleService.generateEnemyTeam(currentRound);
-    
-    // Store original enemy health values (scaled)
+    // Store original enemy health values
     _originalEnemyHealth.clear();
     for (final pet in _enemyTeam!) {
       _originalEnemyHealth[pet.pet.id] = pet.currentHealth;
@@ -119,13 +148,22 @@ class _BattleGameScreenState extends State<BattleGameScreen>
       }
     }
     
-    // Check if this is a boss round
-    final isBossRound = currentRound % 10 == 0;
-    if (isBossRound) {
-      _battleLog.add('🔥 BOSS BATTLE - Round $currentRound! 🔥');
-      _battleLog.add('A powerful boss Yokai has appeared!');
+    // Add battle log entry
+    if (widget.isCavernMode) {
+      _battleLog.add('Cavern Battle - Floor ${widget.cavernRun?.currentFloor ?? 1}');
+      if (widget.cavernRun?.isBossFloor == true) {
+        _battleLog.add('🔥 BOSS FLOOR! 🔥');
+      }
     } else {
-      _battleLog.add('Round $currentRound - Battle started with ${_playerTeam!.length} pets!');
+      final gameProvider = Provider.of<GameProvider>(context, listen: false);
+      final currentRound = gameProvider.userProgress?.currentRound ?? 1;
+      final isBossRound = currentRound % 10 == 0;
+      if (isBossRound) {
+        _battleLog.add('🔥 BOSS BATTLE - Round $currentRound! 🔥');
+        _battleLog.add('A powerful boss Yokai has appeared!');
+      } else {
+        _battleLog.add('Round $currentRound - Battle started with ${_playerTeam!.length} pets!');
+      }
     }
   }
 
@@ -822,8 +860,16 @@ class _BattleGameScreenState extends State<BattleGameScreen>
   void _saveBattleResult() async {
     if (_playerTeam == null || _enemyTeam == null) return;
     
-    final gameProvider = Provider.of<GameProvider>(context, listen: false);
     final isVictory = _battleResult == 'Victory!';
+    
+    if (widget.isCavernMode) {
+      // For Cavern mode, return the result to the calling screen
+      Navigator.pop(context, isVictory);
+      return;
+    }
+    
+    // Normal mode: update user progress
+    final gameProvider = Provider.of<GameProvider>(context, listen: false);
     
     // If we already have battle result data from the battle service, use it
     if (_battleResultData != null) {

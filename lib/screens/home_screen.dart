@@ -12,6 +12,8 @@ import 'collection_screen.dart';
 import 'gacha_screen.dart';
 import 'achievements_screen.dart';
 import 'privacy_screen.dart';
+import 'cavern_screen.dart';
+import 'locked_teams_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -281,6 +283,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             mainAxisSpacing: 16,
             childAspectRatio: 1.2,
             children: [
+              MainMenuButton(
+                title: 'The Cavern',
+                subtitle: 'Draft & battle mode',
+                icon: Icons.terrain,
+                color: Colors.deepPurple,
+                onTap: () => _navigateToScreen(const CavernScreen()),
+              ),
+              MainMenuButton(
+                title: 'Locked Teams',
+                subtitle: 'View competitive teams',
+                icon: Icons.lock,
+                color: Colors.indigo,
+                onTap: () => _navigateToScreen(const LockedTeamsScreen()),
+              ),
               MainMenuButton(
                 title: 'Team Builder',
                 subtitle: 'Build your battle team',
