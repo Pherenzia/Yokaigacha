@@ -104,6 +104,43 @@ class _CavernScreenState extends State<CavernScreen> {
     }
   }
 
+  Future<void> _removeYokaiFromTeam(Pet yokai) async {
+    if (_currentRun == null) return;
+
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+
+      final updatedRun = await CavernService.removeYokaiFromTeam(_currentRun!, yokai);
+      if (updatedRun != null) {
+        setState(() {
+          _currentRun = updatedRun;
+          _isLoading = false;
+        });
+        
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${yokai.name} removed from team!'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to remove yokai: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   Future<void> _startBattle() async {
     if (_currentRun == null || _currentRun!.team.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -494,38 +531,63 @@ class _CavernScreenState extends State<CavernScreen> {
       width: 80,
       margin: const EdgeInsets.only(right: 8),
       child: Card(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Stack(
           children: [
-            Icon(
-              _getPetIcon(yokai.type),
-              size: 30,
-              color: rarityColor,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              yokai.name,
-              style: const TextStyle(fontSize: 10),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            if (yokai.starLevel > 0)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
-                decoration: BoxDecoration(
-                  color: _getStarColor(yokai.starLevel),
-                  borderRadius: BorderRadius.circular(4),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  _getPetIcon(yokai.type),
+                  size: 30,
+                  color: rarityColor,
                 ),
-                child: Text(
-                  '★${yokai.starLevel}',
-                  style: const TextStyle(
+                const SizedBox(height: 4),
+                Text(
+                  yokai.name,
+                  style: const TextStyle(fontSize: 10),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (yokai.starLevel > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: _getStarColor(yokai.starLevel),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      '★${yokai.starLevel}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            // Remove button in top-right corner
+            Positioned(
+              top: 2,
+              right: 2,
+              child: GestureDetector(
+                onTap: () => _removeYokaiFromTeam(yokai),
+                child: Container(
+                  width: 16,
+                  height: 16,
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.close,
                     color: Colors.white,
-                    fontSize: 8,
-                    fontWeight: FontWeight.bold,
+                    size: 12,
                   ),
                 ),
               ),
+            ),
           ],
         ),
       ),
@@ -616,9 +678,7 @@ class _CavernScreenState extends State<CavernScreen> {
 
     return Card(
       elevation: 2,
-      child: InkWell(
-        onTap: canAfford && canAdd ? () => _selectYokai(yokai) : null,
-        child: Container(
+      child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
@@ -754,13 +814,63 @@ class _CavernScreenState extends State<CavernScreen> {
                           fontSize: 8,
                         ),
                       ),
+                    const SizedBox(height: 4),
+                    // Add/Remove button
+                    if (canAfford && canAdd)
+                      ElevatedButton(
+                        onPressed: () => _selectYokai(yokai),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: rarityColor,
+                          minimumSize: const Size(60, 24),
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                        ),
+                        child: const Text(
+                          'Add',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      )
+                    else if (!canAfford)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.grey,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          'No Spirit',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      )
+                    else
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.orange,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          'Duplicate',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
             ],
           ),
         ),
-      ),
     );
   }
 

@@ -129,6 +129,42 @@ class CavernService {
     return updatedRun;
   }
 
+  /// Remove yokai from team and refund spirit
+  static Future<CavernRun?> removeYokaiFromTeam(
+    CavernRun run,
+    Pet yokaiToRemove,
+  ) async {
+    // Find the yokai in the team
+    final yokaiIndex = run.team.indexWhere((yokai) => 
+      yokai.id == yokaiToRemove.id ||
+      (yokai.name == yokaiToRemove.name && 
+       yokai.rarity == yokaiToRemove.rarity && 
+       yokai.variantId == yokaiToRemove.variantId &&
+       yokai.starLevel == yokaiToRemove.starLevel)
+    );
+
+    if (yokaiIndex == -1) {
+      throw Exception('Yokai not found in team');
+    }
+
+    final removedYokai = run.team[yokaiIndex];
+    final spiritCost = _spiritCosts[removedYokai.rarity] ?? 0;
+
+    // Remove yokai from team
+    final newTeam = List<Pet>.from(run.team);
+    newTeam.removeAt(yokaiIndex);
+
+    // Update run with refunded spirit
+    final updatedRun = run.copyWith(
+      team: newTeam,
+      currentSpirit: run.currentSpirit + spiritCost,
+      totalSpiritSpent: run.totalSpiritSpent - spiritCost,
+    );
+
+    await StorageService.saveCavernRun(updatedRun);
+    return updatedRun;
+  }
+
   /// Generate enemy team for floor
   static List<Pet> generateEnemyTeam(int spiritValue, bool isBossFloor) {
     final random = Random();

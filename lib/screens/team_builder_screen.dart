@@ -466,7 +466,12 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
 
   Widget _buildPetCard(Pet pet) {
     final spiritCost = _getPetSpiritCost(pet);
-    final isSelected = _selectedPets.contains(pet);
+    final isSelected = _selectedPets.any((selectedPet) => 
+      selectedPet.name == pet.name && 
+      selectedPet.rarity == pet.rarity && 
+      selectedPet.variantId == pet.variantId &&
+      selectedPet.starLevel == pet.starLevel
+    );
     final canAfford = _canAffordSpirit(spiritCost);
     final canSelect = _selectedPets.length < 5 && !isSelected;
     final rarityColor = _getRarityColor(pet.rarity);
@@ -608,7 +613,11 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
                           ],
                         ),
                         if (isSelected)
-                          const Icon(Icons.check_circle, color: AppTheme.successColor, size: 24)
+                          IconButton(
+                            icon: const Icon(Icons.remove_circle, size: 28),
+                            onPressed: () => _removeSelectedPet(pet),
+                            color: AppTheme.errorColor,
+                          )
                         else if (canSelect && canAfford)
                           IconButton(
                             icon: const Icon(Icons.add_circle, size: 28),
@@ -745,6 +754,26 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
   void _removePet(int index) {
     setState(() {
       _selectedPets.removeAt(index);
+    });
+  }
+
+  void _removeSelectedPet(Pet pet) {
+    print('Attempting to remove pet: ${pet.name} (${pet.rarity.name}, Star: ${pet.starLevel})');
+    print('Current selected pets count: ${_selectedPets.length}');
+    
+    setState(() {
+      // Find and remove the pet from selected pets by matching the original pet data
+      final initialCount = _selectedPets.length;
+      _selectedPets.removeWhere((selectedPet) => 
+        selectedPet.name == pet.name && 
+        selectedPet.rarity == pet.rarity && 
+        selectedPet.variantId == pet.variantId &&
+        selectedPet.starLevel == pet.starLevel
+      );
+      
+      final removedCount = initialCount - _selectedPets.length;
+      print('Removed $removedCount pets from team');
+      print('New selected pets count: ${_selectedPets.length}');
     });
   }
 
