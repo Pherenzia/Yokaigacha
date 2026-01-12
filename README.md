@@ -1,6 +1,6 @@
-# Super Auto Pets Clone
+# Yokai Gacha
 
-A Flutter-based mobile game inspired by Super Auto Pets, featuring a gacha system, turn-based battles, and local data storage. Built with privacy-first principles and Apple's design guidelines.
+A Flutter-based mobile game featuring Japanese yokai creatures, a gacha system, turn-based battles, and local data storage. Built with privacy-first principles and Apple's design guidelines.
 
 ## Features
 
@@ -40,7 +40,7 @@ A Flutter-based mobile game inspired by Super Auto Pets, featuring a gacha syste
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd super-auto-pets-clone
+   cd yokai-gacha
    ```
 
 2. **Install dependencies**
@@ -156,5 +156,5 @@ For questions or support, please open an issue on GitHub.
 
 ---
 
-**Note**: This is a fan-made clone created for educational purposes. It is not affiliated with the original Super Auto Pets game.
+**Note**: This is an original game project created for educational purposes, featuring Japanese mythology-inspired yokai creatures.
 

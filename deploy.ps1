@@ -2,7 +2,7 @@
 # Usage: .\deploy.ps1 [repository-name]
 
 param(
-    [string]$RepoName = "super-auto-pets-clone"
+    [string]$RepoName = "yokai-gacha"
 )
 
 Write-Host "🚀 Starting GitHub Pages Deployment..." -ForegroundColor Green

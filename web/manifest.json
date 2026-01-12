@@ -1,11 +1,11 @@
 {
-    "name": "Super Auto Pets Clone",
-    "short_name": "SAP Clone",
+    "name": "Yokai Gacha",
+    "short_name": "Yokai Gacha",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#F2F2F7",
     "theme_color": "#007AFF",
-    "description": "A Super Auto Pets clone built with Flutter featuring gacha system and turn-based battles.",
+    "description": "A Flutter-based mobile game featuring Japanese yokai creatures, gacha system, and turn-based battles.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

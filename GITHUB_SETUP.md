@@ -29,8 +29,8 @@
 ### 1. Create Repository
 1. Go to GitHub.com
 2. Click "New repository"
-3. Name: `super-auto-pets-clone`
-4. Description: `A Flutter-based Super Auto Pets clone with gacha system, battles, and local storage`
+3. Name: `yokai-gacha`
+4. Description: `A Flutter-based mobile game featuring Japanese yokai creatures, gacha system, and turn-based battles`
 5. Make it **Public** (for portfolio purposes)
 6. **Don't** initialize with README (we already have one)
 
@@ -43,17 +43,17 @@ git init
 git add .
 
 # Make initial commit
-git commit -m "Initial commit: Super Auto Pets Clone
+git commit -m "Initial commit: Yokai Gacha
 
 - Complete Flutter game with gacha system
 - Turn-based battle mechanics
-- Pet collection and starring system
-- Local storage with Hive
+- Yokai collection and starring system
+- Local storage with SharedPreferences
 - Cross-platform support (iOS, Android, Web)
 - Privacy-first design with local data storage"
 
 # Add remote origin (replace with your GitHub username)
-git remote add origin https://github.com/YOUR_USERNAME/super-auto-pets-clone.git
+git remote add origin https://github.com/YOUR_USERNAME/yokai-gacha.git
 
 # Push to GitHub
 git push -u origin main
@@ -75,8 +75,8 @@ git push -u origin main
 
 **1. Build the Web App**
 ```bash
-# Replace 'super-auto-pets-clone' with your actual repository name
-flutter build web --base-href "/super-auto-pets-clone/" --release
+# Replace 'yokai-gacha' with your actual repository name
+flutter build web --base-href "/yokai-gacha/" --release
 ```
 
 **2. Copy 404.html to Build Output**
@@ -115,7 +115,7 @@ git push -u origin gh-pages
    - **Folder**: `/ (root)`
 4. Click **Save**
 5. Wait a few minutes for GitHub to build and deploy
-6. Your app will be available at: `https://YOUR_USERNAME.github.io/super-auto-pets-clone/`
+6. Your app will be available at: `https://YOUR_USERNAME.github.io/yokai-gacha/`
 
 #### Updating GitHub Pages
 
@@ -131,7 +131,7 @@ git commit -m "Your changes"
 git push
 
 # Build the web app again
-flutter build web --base-href "/super-auto-pets-clone/" --release
+flutter build web --base-href "/yokai-gacha/" --release
 
 # Switch to gh-pages branch
 git checkout gh-pages
@@ -170,7 +170,7 @@ You can create a deployment script to automate this process. See `deploy.sh` or 
 
 ### 📱 Technical Features
 - **Cross-Platform**: iOS, Android, and Web support
-- **Local Storage**: All data stored locally using Hive
+- **Local Storage**: All data stored locally using SharedPreferences
 - **State Management**: Provider pattern for clean architecture
 - **Responsive Design**: Adaptive UI for different screen sizes
 - **Privacy-First**: No external tracking or data collection
@@ -196,8 +196,7 @@ You can create a deployment script to automate this process. See `deploy.sh` or 
 ## License & Attribution
 
 - **License**: MIT (for educational purposes)
-- **Attribution**: Inspired by Super Auto Pets (not affiliated)
-- **Purpose**: Educational project demonstrating Flutter game development
+- **Purpose**: Educational project demonstrating Flutter game development with Japanese mythology theme
 
 ---
 

@@ -167,7 +167,7 @@ class PrivacyService {
   /// Get privacy policy text
   static String getPrivacyPolicyText() {
     return '''
-Super Auto Pets Clone - Privacy Policy
+Yokai Gacha - Privacy Policy
 
 Last Updated: ${DateTime.now().toIso8601String().split('T')[0]}
 
@@ -193,7 +193,7 @@ You have the right to:
 - Withdraw consent at any time
 
 5. Contact
-For privacy-related questions, contact us at privacy@superautopetsclone.com
+For privacy-related questions, contact us at privacy@yokaigacha.com
 
 By using this app, you agree to this privacy policy.
 ''';
@@ -202,7 +202,7 @@ By using this app, you agree to this privacy policy.
   /// Get terms of service text
   static String getTermsOfServiceText() {
     return '''
-Super Auto Pets Clone - Terms of Service
+Yokai Gacha - Terms of Service
 
 Last Updated: ${DateTime.now().toIso8601String().split('T')[0]}
 
@@ -222,7 +222,7 @@ You agree to:
 The app is provided "as is" without warranties.
 
 5. Contact
-For questions, contact us at support@superautopetsclone.com
+For questions, contact us at support@yokaigacha.com
 ''';
   }
 }

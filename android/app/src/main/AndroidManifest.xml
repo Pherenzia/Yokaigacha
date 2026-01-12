@@ -7,7 +7,7 @@
     
     <!-- App configuration -->
     <application
-        android:label="Super Auto Pets Clone"
+        android:label="Yokai Gacha"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="false"

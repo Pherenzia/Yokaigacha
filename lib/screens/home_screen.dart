@@ -130,7 +130,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Super Auto Pets',
+                    'Yokai Gacha',
                     style: Theme.of(context).textTheme.displaySmall?.copyWith(
                       color: AppTheme.primaryColor,
                       fontWeight: FontWeight.bold,

@@ -43,11 +43,11 @@ void main() async {
     print('System UI settings skipped on web: $e');
   }
   
-  runApp(const SuperAutoPetsApp());
+  runApp(const YokaiGachaApp());
 }
 
-class SuperAutoPetsApp extends StatelessWidget {
-  const SuperAutoPetsApp({super.key});
+class YokaiGachaApp extends StatelessWidget {
+  const YokaiGachaApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +58,7 @@ class SuperAutoPetsApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => UserProgressProvider()),
       ],
       child: MaterialApp(
-        title: 'Super Auto Pets Clone',
+        title: 'Yokai Gacha',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         home: const HomeScreen(),
