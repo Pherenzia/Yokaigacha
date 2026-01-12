@@ -16,7 +16,7 @@ A Flutter-based mobile game inspired by Super Auto Pets, featuring a gacha syste
 - **Web**: Browser-based version for testing and development
 
 ### 🔒 Privacy & Data Protection
-- **Local Storage**: All game data stored locally using Hive
+- **Local Storage**: All game data stored locally using SharedPreferences
 - **Privacy Controls**: Granular consent management
 - **Data Export**: GDPR-compliant data export functionality
 - **No Tracking**: No analytics or tracking without explicit consent
@@ -90,7 +90,7 @@ lib/
 - **UserProgressProvider**: Player progress and achievements
 
 ### Storage
-- **StorageService**: Hive-based local storage
+- **StorageService**: SharedPreferences-based local storage
 - **PrivacyService**: Privacy controls and data management
 
 ## Privacy & Compliance
@@ -106,7 +106,6 @@ This app is designed with privacy-first principles:
 
 ### Code Generation
 The project uses code generation for:
-- Hive adapters for local storage
 - JSON serialization for data models
 
 Run `flutter packages pub run build_runner build` after making changes to models.
@@ -149,7 +148,7 @@ flutter build web --release
 
 ## License
 
-This project is for educational purposes. All original game concepts belong to their respective owners.
+MIT License - This project is for educational purposes. All original game concepts belong to their respective owners.
 
 ## Support
 

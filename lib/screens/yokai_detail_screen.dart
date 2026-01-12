@@ -79,7 +79,6 @@ class YokaiDetailScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Large Yokai Image Placeholder
           Container(
             width: 120,
             height: 120,

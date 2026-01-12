@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../core/theme/app_theme.dart';
 import '../core/providers/game_provider.dart';
 import '../widgets/currency_display.dart';
+import 'team_builder_screen.dart';
+import 'battle_game_screen.dart';
 
 class BattleScreen extends StatefulWidget {
   const BattleScreen({super.key});
@@ -193,11 +195,8 @@ class _BattleScreenState extends State<BattleScreen> {
         Expanded(
           child: ElevatedButton.icon(
             onPressed: () {
-              // TODO: Implement team selection
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Team selection coming soon!'),
-                ),
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const TeamBuilderScreen()),
               );
             },
             icon: const Icon(Icons.group),
@@ -208,11 +207,8 @@ class _BattleScreenState extends State<BattleScreen> {
         Expanded(
           child: ElevatedButton.icon(
             onPressed: () {
-              // TODO: Implement quick battle
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Quick battle coming soon!'),
-                ),
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const BattleGameScreen()),
               );
             },
             icon: const Icon(Icons.play_arrow),

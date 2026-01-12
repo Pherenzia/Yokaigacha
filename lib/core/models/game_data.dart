@@ -77,11 +77,11 @@ class UserProgress {
   factory UserProgress.initial(String userId) {
     return UserProgress(
       userId: userId,
-      coins: 50000, // Starting coins for testing
-      gems: 10, // Starting gems
+      coins: 500,
+      gems: 10,
       level: 1,
       experience: 0,
-      unlockedPets: ['cat', 'dog', 'bird'], // Starting pets
+      unlockedPets: [],
       unlockedVariants: [],
       battlesWon: 0,
       battlesLost: 0,
@@ -91,7 +91,7 @@ class UserProgress {
       petUsageStats: {},
       achievements: [],
       currentRound: 1,
-      spirit: 12, // 11 + level (1) = 12 spirit
+      spirit: 12,
     );
   }
 

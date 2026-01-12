@@ -69,7 +69,6 @@ class BattleService {
         'enemyAttacks': <Map<String, dynamic>>[],
       };
 
-      // Debug: Print turn info
       if (kDebugMode) {
         print('Turn $turnCount (${isPlayerTurn ? 'Player' : 'Enemy'} turn):');
         print('  Player alive: ${playerAlive.map((p) => '${p.pet.name}(${p.currentHealth}HP)').join(', ')}');

@@ -1127,7 +1127,6 @@ class _BattleGameScreenState extends State<BattleGameScreen>
           playerPet.currentHealth = newHealth;
           playerPet.isAlive = newHealth > 0;
           
-          // Debug logging
           if (kDebugMode) {
             print('Player ${playerPet.pet.name} (${petId}): Health = $newHealth, Alive = ${playerPet.isAlive}');
           }
@@ -1158,7 +1157,6 @@ class _BattleGameScreenState extends State<BattleGameScreen>
           enemyPet.currentHealth = newHealth;
           enemyPet.isAlive = newHealth > 0;
           
-          // Debug logging
           if (kDebugMode) {
             print('Enemy ${enemyPet.pet.name} (${petId}): Health = $newHealth, Alive = ${enemyPet.isAlive}');
           }
