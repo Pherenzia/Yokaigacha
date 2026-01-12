@@ -51,7 +51,6 @@ class _CollectionScreenState extends State<CollectionScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Reload pets when returning to this screen (e.g., from gacha)
     _loadUserPets();
   }
 
@@ -70,7 +69,6 @@ class _CollectionScreenState extends State<CollectionScreen> {
       final Map<String, List<Pet>> groupedPets = {};
       
       for (final pet in pets) {
-        // Create a unique key based on name, rarity, and variant
         final uniqueKey = '${pet.name}_${pet.rarity.name}_${pet.variantId}';
         
         
@@ -80,15 +78,12 @@ class _CollectionScreenState extends State<CollectionScreen> {
         groupedPets[uniqueKey]!.add(pet);
       }
       
-      // Create collection items with quantities and star level info
       final collectionItems = <PetCollectionItem>[];
       groupedPets.forEach((uniqueKey, petList) {
-        // Separate starred pets from material pets (0-star pets)
         final starredPets = petList.where((p) => p.starLevel > 0).toList();
         final materialPets = petList.where((p) => p.starLevel == 0).toList();
         
         if (starredPets.isNotEmpty) {
-          // Show the highest star pet as the main card
           final highestStarPet = StarService.getHighestStarPet(starredPets) ?? starredPets.first;
           final canStarUp = StarService.canStarUp(highestStarPet);
           final availableCopies = StarService.getAvailableCopiesForStarUp(highestStarPet);
@@ -99,10 +94,9 @@ class _CollectionScreenState extends State<CollectionScreen> {
             uniqueKey: uniqueKey,
             canStarUp: canStarUp,
             availableCopiesForStarUp: availableCopies,
-            materialCount: materialPets.length, // Show material count separately
+            materialCount: materialPets.length,
           ));
         } else if (materialPets.isNotEmpty) {
-          // Show material pets as a regular card
           final materialPet = materialPets.first;
           final canStarUp = StarService.canStarUp(materialPet);
           final availableCopies = StarService.getAvailableCopiesForStarUp(materialPet);
@@ -153,7 +147,6 @@ class _CollectionScreenState extends State<CollectionScreen> {
 
   void _applyFilter() {
     if (_selectedRarity == null) {
-      // Show all rarities
       _filteredItems = List.from(_collectionItems);
     } else {
       // Filter by selected rarity
@@ -791,7 +784,6 @@ class _CollectionScreenState extends State<CollectionScreen> {
             backgroundColor: AppTheme.successColor,
           ),
         );
-        // Reload the collection to show updated star levels
         _loadUserPets();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(

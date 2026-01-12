@@ -15,10 +15,8 @@ class StorageService {
     }
   }
 
-  // User Progress Methods
   static Future<void> saveUserProgress(UserProgress progress) async {
     try {
-      // Use SharedPreferences for now
       await _prefs.setString('user_progress', jsonEncode(progress.toJson()));
     } catch (e) {
       print('Failed to save user progress: $e');
@@ -27,20 +25,17 @@ class StorageService {
 
   static UserProgress? getUserProgress() {
     try {
-      // Use SharedPreferences for now
       final jsonString = _prefs.getString('user_progress');
       if (jsonString != null) {
         return UserProgress.fromJson(jsonDecode(jsonString));
       }
     } catch (e) {
       print('Failed to get user progress: $e');
-      // Clear corrupted data
       _prefs.remove('user_progress');
     }
     return null;
   }
 
-  // Clear all corrupted data
   static Future<void> clearCorruptedData() async {
     try {
       await _prefs.remove('user_progress');
@@ -70,10 +65,8 @@ class StorageService {
     return newProgress;
   }
 
-  // Pet Methods
   static Future<void> savePet(Pet pet) async {
     try {
-      // Use SharedPreferences for now
       final petsJson = _prefs.getString('pets') ?? '{}';
       final petsMap = Map<String, dynamic>.from(jsonDecode(petsJson));
       petsMap[pet.id] = pet.toJson();
@@ -85,7 +78,6 @@ class StorageService {
 
   static Pet? getPet(String petId) {
     try {
-      // Use SharedPreferences for now
       final petsJson = _prefs.getString('pets') ?? '{}';
       final petsMap = Map<String, dynamic>.from(jsonDecode(petsJson));
       if (petsMap.containsKey(petId)) {
@@ -99,7 +91,6 @@ class StorageService {
 
   static List<Pet> getAllPets() {
     try {
-      // Use SharedPreferences for now
       final petsJson = _prefs.getString('pets') ?? '{}';
       final petsMap = Map<String, dynamic>.from(jsonDecode(petsJson));
       return petsMap.values.map((petJson) => Pet.fromJson(petJson)).toList();
@@ -111,7 +102,6 @@ class StorageService {
 
   static List<Pet> getUnlockedPets() {
     try {
-      // Use SharedPreferences for now
       final petsJson = _prefs.getString('pets') ?? '{}';
       final petsMap = Map<String, dynamic>.from(jsonDecode(petsJson));
       return petsMap.values
@@ -135,10 +125,8 @@ class StorageService {
     }
   }
 
-  // Battle Results Methods
   static Future<void> saveBattleResult(BattleResult result) async {
     try {
-      // Use SharedPreferences for now
       final battleJson = _prefs.getString('battle_results') ?? '{}';
       final battleMap = Map<String, dynamic>.from(jsonDecode(battleJson));
       battleMap[result.battleId] = result.toJson();
@@ -150,7 +138,6 @@ class StorageService {
 
   static List<BattleResult> getBattleHistory() {
     try {
-      // Use SharedPreferences for now
       final battleJson = _prefs.getString('battle_results') ?? '{}';
       final battleMap = Map<String, dynamic>.from(jsonDecode(battleJson));
       final results = battleMap.values.map((resultJson) => BattleResult.fromJson(resultJson)).toList();
@@ -167,10 +154,8 @@ class StorageService {
     return allBattles.take(limit).toList();
   }
 
-  // Gacha Results Methods
   static Future<void> saveGachaResult(GachaResult result) async {
     try {
-      // Use SharedPreferences for now
       final gachaJson = _prefs.getString('gacha_results') ?? '{}';
       final gachaMap = Map<String, dynamic>.from(jsonDecode(gachaJson));
       gachaMap[result.id] = result.toJson();
@@ -182,7 +167,6 @@ class StorageService {
 
   static List<GachaResult> getGachaHistory() {
     try {
-      // Use SharedPreferences for now
       final gachaJson = _prefs.getString('gacha_results') ?? '{}';
       final gachaMap = Map<String, dynamic>.from(jsonDecode(gachaJson));
       final results = gachaMap.values.map((resultJson) => GachaResult.fromJson(resultJson)).toList();
@@ -194,10 +178,8 @@ class StorageService {
     return [];
   }
 
-  // Achievement Methods
   static Future<void> saveAchievement(Achievement achievement) async {
     try {
-      // Use SharedPreferences for now
       final achievementsJson = _prefs.getString('achievements') ?? '{}';
       final achievementsMap = Map<String, dynamic>.from(jsonDecode(achievementsJson));
       achievementsMap[achievement.id] = achievement.toJson();
@@ -209,7 +191,6 @@ class StorageService {
 
   static List<Achievement> getAllAchievements() {
     try {
-      // Use SharedPreferences for now
       final achievementsJson = _prefs.getString('achievements') ?? '{}';
       final achievementsMap = Map<String, dynamic>.from(jsonDecode(achievementsJson));
       return achievementsMap.values.map((achievementJson) => Achievement.fromJson(achievementJson)).toList();
@@ -221,7 +202,6 @@ class StorageService {
 
   static List<Achievement> getUnlockedAchievements() {
     try {
-      // Use SharedPreferences for now
       final achievementsJson = _prefs.getString('achievements') ?? '{}';
       final achievementsMap = Map<String, dynamic>.from(jsonDecode(achievementsJson));
       return achievementsMap.values
@@ -234,7 +214,6 @@ class StorageService {
     return [];
   }
 
-  // Settings and Preferences
   static Future<void> setSetting(String key, dynamic value) async {
     if (value is String) {
       await _prefs.setString(key, value);
@@ -275,13 +254,11 @@ class StorageService {
     }
   }
 
-  // Privacy and Data Management
   static Future<void> clearAllData() async {
     await _prefs.clear();
   }
 
   static Future<void> exportUserData() async {
-    // This would be used for data portability compliance
     final userData = {
       'userProgress': getUserProgress()?.toJson(),
       'pets': getAllPets().map((pet) => pet.toJson()).toList(),
@@ -306,7 +283,6 @@ class StorageService {
     return null;
   }
 
-  // Cavern Run Methods
   static Future<void> saveCavernRun(CavernRun run) async {
     try {
       final runs = getAllCavernRuns();
@@ -341,7 +317,6 @@ class StorageService {
     return null;
   }
 
-  // Locked Team Methods
   static Future<void> saveLockedTeam(LockedTeam team) async {
     try {
       final teams = getAllLockedTeams();
@@ -376,9 +351,7 @@ class StorageService {
     return null;
   }
 
-  // Cleanup
   static Future<void> close() async {
-    // SharedPreferences doesn't require explicit closing
   }
 }
 

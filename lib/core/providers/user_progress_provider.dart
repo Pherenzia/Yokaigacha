@@ -22,7 +22,6 @@ class UserProgressProvider extends ChangeNotifier {
       _userProgress = await StorageService.getOrCreateUserProgress('default_user');
       _achievements = StorageService.getAllAchievements();
       
-      // Initialize default achievements if none exist
       if (_achievements.isEmpty) {
         await _initializeDefaultAchievements();
       }
@@ -163,7 +162,6 @@ class UserProgressProvider extends ChangeNotifier {
     }
   }
 
-  // Check and unlock achievements
   Future<void> _checkAchievements() async {
     if (_userProgress == null) return;
 
@@ -200,7 +198,6 @@ class UserProgressProvider extends ChangeNotifier {
     }
   }
 
-  // Check if an achievement is unlocked
   bool _isAchievementUnlocked(Achievement achievement) {
     if (_userProgress == null) return false;
     
@@ -219,10 +216,8 @@ class UserProgressProvider extends ChangeNotifier {
           if (_userProgress!.unlockedPets.length < requiredValue) return false;
           break;
         case 'gacha_pulls':
-          // This would need to be tracked separately
           break;
         case 'legendary_pets':
-          // This would need to be tracked separately
           break;
         case 'level':
           if (_userProgress!.level < requiredValue) return false;
@@ -324,7 +319,6 @@ class UserProgressProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Get progress statistics
   Map<String, dynamic> getProgressStats() {
     if (_userProgress == null) {
       return {};

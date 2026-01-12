@@ -321,8 +321,6 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
   }
 
   double _calculateAchievementProgress(dynamic achievement) {
-    // This would calculate progress based on current user stats
-    // For now, return a placeholder value
     return 0.0;
   }
 }

@@ -87,7 +87,6 @@ class GameProvider extends ChangeNotifier {
     int newExperience = _userProgress!.experience + amount;
     int newLevel = _userProgress!.level;
     
-    // Check for level up
     while (newExperience >= newLevel * 100) {
       newExperience -= newLevel * 100;
       newLevel++;
@@ -192,9 +191,7 @@ class GameProvider extends ChangeNotifier {
 
   // Team Management
   void _loadCurrentTeam() {
-    // Load the last used team or create a default one
-    // This would typically load from storage
-    _currentTeam = null; // Placeholder
+    _currentTeam = null;
   }
 
   void setCurrentTeam(BattleTeam team) {
@@ -213,7 +210,6 @@ class GameProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Data Export for Privacy Compliance
   Future<Map<String, dynamic>?> exportUserData() async {
     try {
       await StorageService.exportUserData();
@@ -225,7 +221,6 @@ class GameProvider extends ChangeNotifier {
     }
   }
 
-  // Data Deletion for Privacy Compliance
   Future<void> deleteAllUserData() async {
     try {
       await StorageService.clearAllData();

@@ -9,7 +9,6 @@ class PrivacyService {
   static const String _dataCollectionConsentKey = 'data_collection_consent';
   static const String _privacyPolicyVersionKey = 'privacy_policy_version';
   
-  // Current privacy policy version - increment when policy changes
   static const String _currentPrivacyPolicyVersion = '1.0.0';
 
   // Privacy consent status
@@ -27,7 +26,6 @@ class PrivacyService {
     _crashlyticsConsentGiven = prefs.getBool(_crashlyticsConsentKey) ?? false;
     _dataCollectionConsentGiven = prefs.getBool(_dataCollectionConsentKey) ?? false;
     
-    // Check if privacy policy version has changed
     final lastVersion = prefs.getString(_privacyPolicyVersionKey);
     if (lastVersion != _currentPrivacyPolicyVersion) {
       // Reset all consents if policy version changed
@@ -148,7 +146,6 @@ class PrivacyService {
     }
     
     // TODO: Implement actual analytics logging
-    // This would integrate with Firebase Analytics or similar service
   }
 
   /// Log crash (only if consent given)
@@ -165,7 +162,6 @@ class PrivacyService {
     }
     
     // TODO: Implement actual crash reporting
-    // This would integrate with Firebase Crashlytics or similar service
   }
 
   /// Get privacy policy text
