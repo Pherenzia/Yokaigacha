@@ -6,6 +6,7 @@ import '../core/services/storage_service.dart';
 import '../core/theme/app_theme.dart';
 import '../widgets/currency_display.dart';
 import 'battle_game_screen.dart';
+import 'yokai_detail_screen.dart';
 
 class CavernScreen extends StatefulWidget {
   const CavernScreen({super.key});
@@ -676,9 +677,18 @@ class _CavernScreenState extends State<CavernScreen> {
     final canAfford = _currentRun!.currentSpirit >= spiritCost;
     final canAdd = CavernService.canAddYokaiToTeam(_currentRun!, yokai);
 
-    return Card(
-      elevation: 2,
-      child: Container(
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => YokaiDetailScreen(yokai: yokai),
+          ),
+        );
+      },
+      child: Card(
+        elevation: 2,
+        child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
@@ -871,6 +881,7 @@ class _CavernScreenState extends State<CavernScreen> {
             ],
           ),
         ),
+    ),
     );
   }
 

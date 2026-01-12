@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Super Auto Pets Clone</title>
+  <script>
+    // GitHub Pages 404.html redirect for Flutter web apps
+    // This handles client-side routing by redirecting all 404s to index.html
+    var path = window.location.pathname;
+    var segments = path.split('/').filter(function(segment) {
+      return segment !== '';
+    });
+    
+    // Get repository name from path (first segment after domain)
+    var repoName = segments[0] || 'super-auto-pets-clone';
+    var baseHref = '/' + repoName + '/';
+    
+    // Preserve query string and hash
+    var query = window.location.search;
+    var hash = window.location.hash;
+    
+    // Redirect to index.html with the correct base path
+    window.location.replace(baseHref + 'index.html' + query + hash);
+  </script>
+  <meta http-equiv="refresh" content="0; url=./index.html">
+</head>
+<body>
+  <p>Redirecting to the app...</p>
+  <p>If you are not redirected automatically, <a href="./index.html">click here</a>.</p>
+</body>
+</html>

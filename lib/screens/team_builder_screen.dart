@@ -7,6 +7,7 @@ import '../core/services/star_service.dart';
 import '../core/providers/user_progress_provider.dart';
 import '../widgets/currency_display.dart';
 import 'battle_game_screen.dart';
+import 'yokai_detail_screen.dart';
 
 class TeamBuilderScreen extends StatefulWidget {
   const TeamBuilderScreen({super.key});
@@ -476,9 +477,18 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
     final canSelect = _selectedPets.length < 5 && !isSelected;
     final rarityColor = _getRarityColor(pet.rarity);
 
-    return Card(
-      elevation: isSelected ? 8 : 2,
-      child: Container(
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => YokaiDetailScreen(yokai: pet),
+          ),
+        );
+      },
+      child: Card(
+        elevation: isSelected ? 8 : 2,
+        child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
@@ -685,6 +695,7 @@ class _TeamBuilderScreenState extends State<TeamBuilderScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 

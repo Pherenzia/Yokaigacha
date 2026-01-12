@@ -65,13 +65,99 @@ git push -u origin main
 3. **Issues**: Enable for bug reports and feature requests
 4. **Wiki**: Enable for additional documentation
 
-### 4. GitHub Pages (Optional)
-If you want to host the web version:
-1. Go to Settings → Pages
-2. Source: Deploy from a branch
-3. Branch: `gh-pages` (create this branch)
-4. Build the web version: `flutter build web`
-5. Deploy the `build/web` folder to the `gh-pages` branch
+### 4. GitHub Pages Deployment
+
+#### Prerequisites
+- Repository must be public (or you have GitHub Pro/Team)
+- Flutter SDK installed and configured
+
+#### Step-by-Step Deployment
+
+**1. Build the Web App**
+```bash
+# Replace 'super-auto-pets-clone' with your actual repository name
+flutter build web --base-href "/super-auto-pets-clone/" --release
+```
+
+**2. Copy 404.html to Build Output**
+The `web/404.html` file will be automatically included in the build, but you can verify it exists:
+```bash
+# Verify 404.html exists in build/web
+ls build/web/404.html
+```
+
+**3. Create and Switch to gh-pages Branch**
+```bash
+# Create orphan branch (no history)
+git checkout --orphan gh-pages
+
+# Remove all files from staging
+git rm -rf .
+
+# Copy build/web contents to root
+cp -r build/web/* .
+
+# Add all files
+git add .
+
+# Make initial commit
+git commit -m "Deploy to GitHub Pages"
+
+# Push to GitHub
+git push -u origin gh-pages
+```
+
+**4. Configure GitHub Pages**
+1. Go to your repository on GitHub
+2. Navigate to **Settings** → **Pages**
+3. Under **Source**, select:
+   - **Branch**: `gh-pages`
+   - **Folder**: `/ (root)`
+4. Click **Save**
+5. Wait a few minutes for GitHub to build and deploy
+6. Your app will be available at: `https://YOUR_USERNAME.github.io/super-auto-pets-clone/`
+
+#### Updating GitHub Pages
+
+After making changes to your app:
+
+```bash
+# Switch back to main branch
+git checkout main
+
+# Make your changes and commit
+git add .
+git commit -m "Your changes"
+git push
+
+# Build the web app again
+flutter build web --base-href "/super-auto-pets-clone/" --release
+
+# Switch to gh-pages branch
+git checkout gh-pages
+
+# Remove old files (except .git)
+git rm -rf . --ignore-unmatch
+
+# Copy new build
+cp -r build/web/* .
+
+# Commit and push
+git add .
+git commit -m "Update GitHub Pages deployment"
+git push
+```
+
+#### Alternative: Automated Deployment Script
+
+You can create a deployment script to automate this process. See `deploy.sh` or `deploy.ps1` in the repository root.
+
+#### Troubleshooting
+
+- **404 errors on navigation**: Ensure `404.html` exists in `build/web` and is deployed
+- **Assets not loading**: Verify `--base-href` matches your repository name exactly
+- **Blank page**: Check browser console for errors, ensure all assets are in `build/web`
+- **Build fails**: Run `flutter clean` then `flutter pub get` before building
 
 ## Features Showcase
 

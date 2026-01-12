@@ -7,6 +7,7 @@ import '../core/models/pet.dart';
 import '../core/services/storage_service.dart';
 import '../core/services/star_service.dart';
 import '../widgets/currency_display.dart';
+import 'yokai_detail_screen.dart';
 
 // Helper class to group pets by their unique characteristics
 class PetCollectionItem {
@@ -381,9 +382,18 @@ class _CollectionScreenState extends State<CollectionScreen> {
     final isUnlocked = pet.isUnlocked;
     final rarityColor = _getRarityColor(pet.rarity);
 
-    return Card(
-      elevation: isUnlocked ? 4 : 1,
-      child: Container(
+    return GestureDetector(
+      onTap: isUnlocked ? () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => YokaiDetailScreen(yokai: pet),
+          ),
+        );
+      } : null,
+      child: Card(
+        elevation: isUnlocked ? 4 : 1,
+        child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
@@ -674,6 +684,7 @@ class _CollectionScreenState extends State<CollectionScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 

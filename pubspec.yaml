@@ -30,9 +30,6 @@ dependencies:
   uuid: ^4.2.1
   json_annotation: ^4.8.1
   
-  # Privacy & Analytics (placeholder for future implementation)
-  # firebase_analytics: ^10.7.4
-  # firebase_crashlytics: ^3.4.8
 
 dev_dependencies:
   flutter_test:
@@ -50,15 +47,4 @@ flutter:
     - assets/images/
     - assets/animations/
     - assets/sounds/
-  
-  # fonts:
-  #   - family: SF Pro Display
-  #     fonts:
-  #       - asset: assets/fonts/SFProDisplay-Regular.ttf
-  #       - asset: assets/fonts/SFProDisplay-Medium.ttf
-  #         weight: 500
-  #       - asset: assets/fonts/SFProDisplay-Semibold.ttf
-  #         weight: 600
-  #       - asset: assets/fonts/SFProDisplay-Bold.ttf
-  #         weight: 700
 

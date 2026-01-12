@@ -1,35 +1,17 @@
 import 'dart:convert';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/game_data.dart';
 import '../models/pet.dart';
 import '../models/cavern_run.dart';
 
 class StorageService {
-  static late Box<UserProgress> _userProgressBox;
-  static late Box<Pet> _petsBox;
-  static late Box<BattleResult> _battleResultsBox;
-  static late Box<GachaResult> _gachaResultsBox;
-  static late Box<Achievement> _achievementsBox;
   static late SharedPreferences _prefs;
 
   static Future<void> init() async {
     try {
-      // Initialize SharedPreferences first (works on web)
       _prefs = await SharedPreferences.getInstance();
-      
-      // Try to initialize Hive boxes (may fail on web)
-      try {
-        // For now, skip Hive adapter registration and use SharedPreferences fallback
-        // This ensures the app works while we can focus on the core gameplay
-        print('Using SharedPreferences for data storage (Hive adapters not available)');
-      } catch (hiveError) {
-        print('Hive initialization failed, using SharedPreferences only: $hiveError');
-        // Continue with SharedPreferences only
-      }
     } catch (e) {
       print('Storage service initialization failed: $e');
-      // Continue without storage - the app will still work
     }
   }
 
@@ -295,11 +277,6 @@ class StorageService {
 
   // Privacy and Data Management
   static Future<void> clearAllData() async {
-    await _userProgressBox.clear();
-    await _petsBox.clear();
-    await _battleResultsBox.clear();
-    await _gachaResultsBox.clear();
-    await _achievementsBox.clear();
     await _prefs.clear();
   }
 
@@ -401,11 +378,7 @@ class StorageService {
 
   // Cleanup
   static Future<void> close() async {
-    await _userProgressBox.close();
-    await _petsBox.close();
-    await _battleResultsBox.close();
-    await _gachaResultsBox.close();
-    await _achievementsBox.close();
+    // SharedPreferences doesn't require explicit closing
   }
 }
 

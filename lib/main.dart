@@ -15,16 +15,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   try {
-    // Initialize Hive for local storage (skip on web if it fails)
     await Hive.initFlutter();
-    
-    // Initialize storage service
     await StorageService.init();
-    
-    // Initialize privacy service
     await PrivacyService.initialize();
   } catch (e) {
-    // If initialization fails (e.g., on web), continue without local storage
     print('Storage initialization failed, continuing without local storage: $e');
   }
   

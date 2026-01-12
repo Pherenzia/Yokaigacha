@@ -88,10 +88,40 @@ coverage/
 
 # Local environment files
 .env
+.env.*
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+*.env
+secrets.json
+config.json
+credentials.json
+
+# SSH Keys and Certificates
+*.pem
+*.key
+*.crt
+*.cert
+*.p12
+*.pfx
+*.keystore
+*.jks
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+id_dsa
+id_dsa.pub
+*.ppk
+known_hosts
+
+# API Keys and Secrets
+*secret*
+*private*
+*credential*
+api_keys.txt
+secrets.txt
 
 # Build outputs
 build/
@@ -109,3 +139,33 @@ dist/
 # Temporary files
 *.tmp
 *.temp
+
+# VS Code settings (may contain sensitive data)
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Planning and development files
+*plan*
+*planning*
+*notes*
+*note*
+*todo*
+*todos*
+*draft*
+*drafts*
+*scratch*
+*scratchpad*
+*brainstorm*
+*ideas*
+*idea*
+*backlog*
+*roadmap*
+*design*
+*sketch*
