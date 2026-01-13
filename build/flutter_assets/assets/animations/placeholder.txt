@@ -1,2 +1,0 @@
-# Placeholder for animation files
-# Add Lottie animation files here
